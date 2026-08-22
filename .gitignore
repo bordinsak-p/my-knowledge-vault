@@ -1,0 +1,14 @@
+# Secrets — API keys, TLS private keys ของ plugin (Local REST API เก็บ private key ไว้ตรงนี้)
+.obsidian/plugins/*/data.json
+
+# Secrets — มี password / private key path ของระบบภายในบริษัทฝังอยู่ตรง ๆ
+setup project/PTS.md
+setup project/STR.md
+
+# workspace/UI state ของเครื่องนี้ ไม่ควร sync ข้ามเครื่อง
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# ไฟล์ระบบ
+.DS_Store
+Thumbs.db

@@ -23,11 +23,11 @@ Flyway สร้างตารางพิเศษชื่อ `flyway_schema_
 ```
 flyway_schema_history
 ┌─────────────┬──────────┬───────────────────┬──────────┬─────────────────────┐
-│ installed_rank │ version │ description       │ checksum │ installed_on        │
+│ installed_rank │ version │ description     │ checksum │ installed_on        │
 ├─────────────┼──────────┼───────────────────┼──────────┼─────────────────────┤
-│ 1              │ 1       │ create product     │ 8f3a2c1  │ 2026-01-10 09:00:00 │
-│ 2              │ 2       │ add category       │ 1b9e7f4  │ 2026-02-15 14:20:00 │
-│ 3              │ 3       │ add order table    │ ac02de9  │ 2026-08-18 10:05:00 │
+│ 1           │ 1       │ create product     │ 8f3a2c1  │ 2026-01-10 09:00:00 │
+│ 2           │ 2       │ add category       │ 1b9e7f4  │ 2026-02-15 14:20:00 │
+│ 3           │ 3       │ add order table    │ ac02de9  │ 2026-08-18 10:05:00 │
 └─────────────┴──────────┴───────────────────┴──────────┴─────────────────────┘
 ```
 

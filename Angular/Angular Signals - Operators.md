@@ -4,11 +4,11 @@ Operators ใน Angular Signals เป็นเครื่องมือท�
 
 ## ตารางเนื้อหา
 
-- [Operators พื้นฐานของ Signal](https://claude.ai/chat/83f50173-b880-4ec7-9561-794f31635354#operators-%E0%B8%9E%E0%B8%B7%E0%B9%89%E0%B8%99%E0%B8%90%E0%B8%B2%E0%B8%99%E0%B8%82%E0%B8%AD%E0%B8%87-signal)
-- [RxJS Interop - การใช้งานร่วมกับ RxJS](https://claude.ai/chat/83f50173-b880-4ec7-9561-794f31635354#rxjs-interop---%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%A3%E0%B9%88%E0%B8%A7%E0%B8%A1%E0%B8%81%E0%B8%B1%E0%B8%9A-rxjs)
-- [Signal Input Operators](https://claude.ai/chat/83f50173-b880-4ec7-9561-794f31635354#signal-input-operators)
-- [การสร้าง Custom Operators](https://claude.ai/chat/83f50173-b880-4ec7-9561-794f31635354#%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%AA%E0%B8%A3%E0%B9%89%E0%B8%B2%E0%B8%87-custom-operators)
-- [ตัวอย่างการใช้งาน Operators](https://claude.ai/chat/83f50173-b880-4ec7-9561-794f31635354#%E0%B8%95%E0%B8%B1%E0%B8%A7%E0%B8%AD%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%87%E0%B8%B2%E0%B8%99-operators)
+- [Operators พื้นฐานของ Signal](https://angular.dev/guide/signals)
+- [RxJS Interop - การใช้งานร่วมกับ RxJS](https://angular.dev/ecosystem/rxjs-interop)
+- [Signal Input Operators](https://angular.dev/guide/signals/inputs)
+- [การสร้าง Custom Operators](https://angular.dev/guide/signals)
+- [ตัวอย่างการใช้งาน Operators](https://angular.dev/guide/signals)
 
 ## Operators พื้นฐานของ Signal
 
@@ -32,16 +32,23 @@ const counter = signal(0);
 counter.update(current => current + 1); // เพิ่มค่าขึ้น 1
 ```
 
-### 3. `mutate()`
+### 3. ~~`mutate()`~~ — ถูกถอดออกจาก API แล้ว ใช้ `update()` แทน
 
-ใช้สำหรับแก้ไขค่าของ signal แบบ mutable โดยตรงโดยไม่ต้องสร้างอ็อบเจกต์ใหม่ **(เหมาะสำหรับ objects หรือ arrays)**
+> ⚠️ **`mutate()` ไม่มีอยู่ใน public API ของ Angular Signals อีกต่อไป** (ถูกถอดออกก่อน Angular 18 ออกตัวจริง) โค้ดที่เรียก `.mutate()` จะ **compile ไม่ผ่าน** — ใช้ `.update()` แทนเสมอ แม้กับ object/array ก็ทำแบบเดียวกัน แค่คืน**ค่าใหม่**แทนที่จะแก้ของเดิมตรง ๆ
 
 ```typescript
 const user = signal({ name: 'John', age: 30 });
-user.mutate(value => {
-  value.age = 31; // แก้ไขค่าโดยตรงโดยไม่ต้องสร้างอ็อบเจกต์ใหม่
-});
+
+// ✅ update() — สร้าง object ใหม่ด้วย spread แทนการแก้ของเดิม
+user.update(value => ({ ...value, age: 31 }));
+
+// array ก็หลักการเดียวกัน
+const items = signal<string[]>(['a', 'b']);
+items.update(list => [...list, 'c']);          // เพิ่มสมาชิก
+items.update(list => list.filter(x => x !== 'a'));  // ลบสมาชิก
 ```
+
+**เหตุผลที่ถอดออก:** การแก้ object/array เดิมตรง ๆ (mutation) ตรวจจับการเปลี่ยนแปลงได้ยากกว่า โดยเฉพาะภายใต้ zoneless change detection — `update()` ที่คืนค่าใหม่เสมอทำให้ signal รู้แน่นอนว่าเปลี่ยนแล้วจริง (ตรวจด้วย `Object.is()` เทียบ reference)
 
 ### 4. `asReadonly()`
 
@@ -249,58 +256,54 @@ export class ParentComponent {
 
 ### ตัวอย่าง Custom Operator: `debounce`
 
+> ⚠️ **แก้ไขแล้ว:** ตัวอย่างเดิมเรียก `effect()` ข้างในฟังก์ชันแยกที่ไม่ใช่ constructor/field initializer ของ class — ทำแบบนั้น `effect()` จะ**ไม่ได้อยู่ใน injection context** และ throw `NG0203` ทันที ต้องรับ `Injector` เข้ามาเอง (ผ่าน `inject(Injector)` ตอนถูกเรียกจาก injection context ของ caller หรือรับเป็นพารามิเตอร์ให้ส่งเองได้) แล้วส่งต่อให้ `effect()` ผ่าน option — รายละเอียดเต็ม ๆ ที่ [[Angular Signal Primitives]] ข้อ 4
+
 ```typescript
-import { signal, type WritableSignal, type Signal, type SettableSignal } from '@angular/core';
+import { signal, effect, inject, Injector, type Signal } from '@angular/core';
 
 // Custom operator สำหรับ debounce signal
-export function debounce<T>(
-  source: Signal<T>, 
-  delay: number
-): Signal<T> {
-  // สร้าง signal ใหม่ที่จะ debounce ค่า
+// ต้องเรียกจาก field initializer/constructor ของ component/service เสมอ
+// (หรือส่ง injector เข้ามาเองถ้าเรียกจากที่อื่น)
+export function debounce<T>(source: Signal<T>, delay: number, injector?: Injector): Signal<T> {
+  const activeInjector = injector ?? inject(Injector);   // ใช้ injection context ปัจจุบันถ้าไม่ได้ส่งมาเอง
   const debouncedSignal = signal<T>(source());
-  let timeoutId: any = null;
-  
-  // สร้าง effect ที่จะติดตามการเปลี่ยนแปลงของ source signal
-  effect(() => {
-    // อ่านค่าปัจจุบันของ source signal
+
+  effect((onCleanup) => {
     const currentValue = source();
-    
-    // ยกเลิก timeout เดิม (ถ้ามี)
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
-    
-    // ตั้ง timeout ใหม่
-    timeoutId = setTimeout(() => {
-      // อัพเดต debounced signal หลังจากรอ delay
-      debouncedSignal.set(currentValue);
-      timeoutId = null;
-    }, delay);
-  });
-  
+    const timeoutId = setTimeout(() => debouncedSignal.set(currentValue), delay);
+    onCleanup(() => clearTimeout(timeoutId));   // ยกเลิก timeout เดิมให้เองทุกรอบ ไม่ต้องเก็บตัวแปรนอก effect
+  }, { injector: activeInjector });
+
   return debouncedSignal;
 }
+```
 
-// ตัวอย่างการใช้งาน
-const searchQuery = signal('');
-const debouncedSearch = debounce(searchQuery, 300);
+```typescript
+// ✅ ตัวอย่างการใช้งานที่ถูกต้อง — เรียกตอน field initializer ของ component (อยู่ใน injection context)
+export class SearchComponent {
+  searchQuery = signal('');
+  debouncedSearch = debounce(this.searchQuery, 300);
 
-// เมื่อมีการเปลี่ยนแปลง searchQuery, debouncedSearch จะอัพเดตหลังจากรอ 300ms
-searchQuery.set('Angular');
-// debouncedSearch() จะอัพเดตเป็น 'Angular' หลังจาก 300ms
+  onInput(value: string) {
+    this.searchQuery.set(value);
+    // debouncedSearch() จะอัพเดตเป็นค่าล่าสุดหลังจากหยุดพิมพ์ 300ms
+  }
+}
 ```
 
 ### ตัวอย่าง Custom Operator: `distinct`
 
+> ⚠️ **แก้ไขแล้ว:** ปัญหาเดียวกับ `debounce` ข้างบน — `effect()` ต้องได้ `injector` ที่ถูกต้อง
+
 ```typescript
-import { signal, type Signal } from '@angular/core';
+import { signal, effect, inject, Injector, type Signal } from '@angular/core';
 
 // Custom operator สำหรับกรองค่าที่ซ้ำ
-export function distinct<T>(source: Signal<T>): Signal<T> {
+export function distinct<T>(source: Signal<T>, injector?: Injector): Signal<T> {
+  const activeInjector = injector ?? inject(Injector);
   const result = signal<T>(source());
   let lastValue = source();
-  
+
   effect(() => {
     const currentValue = source();
     // อัพเดตเฉพาะเมื่อค่าเปลี่ยนแปลง
@@ -308,20 +311,27 @@ export function distinct<T>(source: Signal<T>): Signal<T> {
       result.set(currentValue);
       lastValue = currentValue;
     }
-  });
-  
+  }, { injector: activeInjector });
+
   return result;
 }
-
-// ตัวอย่างการใช้งาน
-const counter = signal(0);
-const distinctCounter = distinct(counter);
-
-// เมื่อ set ค่าเดิม จะไม่เกิดการอัพเดตใน distinctCounter
-counter.set(0); // ไม่มีการอัพเดต distinctCounter
-counter.set(1); // distinctCounter อัพเดตเป็น 1
-counter.set(1); // ไม่มีการอัพเดต distinctCounter 
 ```
+
+```typescript
+// ✅ ตัวอย่างการใช้งานที่ถูกต้อง — เรียกตอน field initializer ของ component
+export class CounterComponent {
+  counter = signal(0);
+  distinctCounter = distinct(this.counter);
+
+  set(value: number) {
+    this.counter.set(value);
+    // set ค่าเดิมซ้ำ (เช่น 0 → 0) จะไม่ทำให้ distinctCounter อัพเดต
+    // set ค่าใหม่ (เช่น 0 → 1) distinctCounter ถึงจะอัพเดตตาม
+  }
+}
+```
+
+> **หมายเหตุ:** `distinct` ใช้ `effect()` เพราะต้องจำค่าก่อนหน้า (`lastValue`) ข้ามการอ่านแต่ละรอบ ซึ่งเป็น state ที่ `computed()` (ต้อง pure ไม่มี state ของตัวเอง) ทำไม่ได้ — เป็นหนึ่งในไม่กี่กรณีที่ใช้ `effect()` เพื่อเชื่อม signal สองตัวได้อย่างสมเหตุสมผล ต่างจาก use case ทั่วไปที่ควรใช้ `computed()` แทน (ดู [[Angular Signal Primitives]] ข้อ 5)
 
 ## ตัวอย่างการใช้งาน Operators
 
@@ -546,7 +556,7 @@ export class UserFormComponent {
 
 Operators ของ Angular Signals ช่วยให้เราสามารถจัดการกับ reactive state ได้อย่างมีประสิทธิภาพ ไม่ว่าจะเป็น:
 
-1. **Operators พื้นฐาน**: `set()`, `update()`, `mutate()`, `asReadonly()`
+1. **Operators พื้นฐาน**: `set()`, `update()`, `asReadonly()` (~~`mutate()`~~ ถูกถอดออกจาก API แล้ว)
 2. **RxJS Interop**: `toSignal()`, `toObservable()`, `fromEvent()`
 3. **Signal Inputs**: `input()`, `model()`
 4. **Custom Operators**: สร้าง operators เองเพื่อการใช้งานเฉพาะทาง

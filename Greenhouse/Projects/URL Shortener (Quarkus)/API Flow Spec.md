@@ -7,7 +7,7 @@ type: spec
 status: ready
 parent: "[[URL Shortener (Quarkus)]]"
 created: 2026-09-11
-updated: 2026-09-12
+updated: 2026-09-13
 ---
 
 # 🛠️ API Flow Spec — URL Shortener
@@ -56,20 +56,120 @@ updated: 2026-09-12
 **คำสงวน — เก็บใน DB** (ตัดสินใจ 2026-09-12) ตาราง `forbidden_words(word VARCHAR PRIMARY KEY)` seed ค่าเริ่มต้นไว้ (`api`, `admin`, `health`, `q`, …) เพิ่ม/ลบได้โดยไม่ต้อง redeploy
 เช็คเฉพาะตอน validate `custom_alias` เท่านั้น (ไม่ใช่ hot path ไม่ต้อง cache) — โค้ดสุ่มไม่ต้องเช็คตารางนี้ เพราะความยาว fix ไว้ที่ 7 ตัวอักษรอยู่แล้ว ยาวกว่าคำสงวนทุกคำ ชนกันไม่ได้อยู่แล้วโดยโครงสร้าง
 
+**🎲 random base62 code — gen จากอะไร**
+
+alphabet คือ 62 ตัวอักษร `0-9` + `a-z` + `A-Z` (`"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"`) แล้วสุ่มหยิบทีละตัวจนครบ 7 ตัว
+
+ใช้ **`java.security.SecureRandom`** เป็นแหล่งสุ่ม (ไม่ใช่ `Random`/`ThreadLocalRandom` ธรรมดา) เพราะข้อดีของวิธีนี้ที่เขียนไว้ใน prior art คือ "เดาไม่ได้" — ถ้าใช้ PRNG ธรรมดาที่ seed คาดเดาได้ ก็เสียคุณสมบัตินี้ไปเปล่า ๆ
+
+```java
+private static final String ALPHABET =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+private static final SecureRandom RANDOM = new SecureRandom(); // instance เดียว ใช้ซ้ำ ห้าม new ทุกครั้งที่เรียก
+
+public static String generateCode(int length) {
+    StringBuilder sb = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+        sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
+    }
+    return sb.toString();
+}
+```
+
+**⚠️ จุดที่ต้องระวัง:** `new SecureRandom()` **ห้ามสร้างใหม่ทุกครั้งที่ generate code** — ต้องมี instance เดียว (static field) ใช้ร่วมกันทั้งแอป ไม่งั้นแต่ละครั้งจะไป seed ใหม่จาก entropy pool ของ OS ซ้ำ ๆ ซึ่งช้าและกิน entropy โดยไม่จำเป็น
+เชื่อมกับความเสี่ยงที่บันทึกไว้แล้วในโน้ตหลัก (⚠️ ความเสี่ยง): `SecureRandom` บน GraalVM native image เคยมีปัญหาเรื่อง entropy source มาก่อน — **ต้องทดสอบให้แน่ใจตั้งแต่การทดลองเล็กที่สุด** ว่า generate code ได้เร็วและไม่ hang ตอนรันเป็น native binary
+
 **business logic**
 1. มี `custom_alias` → insert ตรง ๆ, ให้ unique constraint ของ DB เป็นตัวกันชนซ้ำ
-2. ไม่มี `custom_alias` → generate random base62 code แล้ว insert, ถ้าชน unique constraint หรือ SQLite `SQLITE_BUSY` ให้ retry **สูงสุด 3 ครั้ง** (ตัดสินใจ 2026-09-12) เกินนั้นถือว่า fail
+2. ไม่มี `custom_alias` → เรียก `generateCode(7)` ด้านบน แล้ว insert, ถ้าชน unique constraint หรือ SQLite `SQLITE_BUSY` ให้ retry (generate code ใหม่ทุกครั้งที่ retry) **สูงสุด 3 ครั้ง** (ตัดสินใจ 2026-09-12) เกินนั้นถือว่า fail
 3. บันทึก `created_date = now`, `deleted_at = null` (ไม่มี `created_by` เพราะไม่มี auth ไม่มี identity ให้ผูก)
 4. ไม่ query หา `original_url` เดิมเพื่อ dedupe (ตามที่สรุปไว้แล้วในโน้ตหลัก)
 5. บน SQLite: insert แต่ละครั้งแย่งไฟล์ lock กับ writer อื่น (single-writer) — ไม่กระทบตอนใช้งานคนเดียว แต่ถ้าทดสอบสร้าง link รัว ๆ พร้อมกันหลาย thread จะเห็นการ serialize/`SQLITE_BUSY` ได้ (นับรวมอยู่ใน retry 3 ครั้งด้านบน)
 
 **Response**
-| status | เมื่อไหร่ |
-|---|---|
-| `201` | สำเร็จ → `{ "code", "short_url", "expires_at" }` |
-| `400` | url ไม่ผ่าน validate / scheme ไม่ผ่าน / alias ผิด format |
-| `409` | `custom_alias` ชนของเดิม หรือชนคำสงวน |
-| `500` | retry ครบ 3 ครั้งแล้วยังไม่สำเร็จ (ชน unique constraint ต่อเนื่อง หรือ SQLite ยัง busy) |
+| status | เมื่อไหร่ 
+|--------|---------------------------------------------------------------------------------------  |
+| `201` | สำเร็จ → `{ "code", "short_url", "expires_at" }`                                             |
+| `400` | url ไม่ผ่าน validate / scheme ไม่ผ่าน / alias ผิด format                                              |
+| `409` | `custom_alias` ชนของเดิม หรือชนคำสงวน                                                                 |
+| `500` | retry ครบ 3 ครั้งแล้วยังไม่สำเร็จ (ชน unique constraint ต่อเนื่อง หรือ SQLite ยัง busy)  |
+
+**🧪 ตัวอย่างจริง**
+
+_กรณีไม่ใส่ `custom_alias`_ — ส่ง:
+```json
+POST /api/links
+{
+  "original_url": "https://www.amazon.com/gp/product/B08N5WRWNW/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1"
+}
+```
+Server สุ่มได้ `aB3xK9z` → insert ลง `short_urls`:
+
+| code      | original_url                                           | created_date           | expires_at | deleted_at |
+| --------- | ------------------------------------------------------ | ---------------------- | ---------- | ---------- |
+| `aB3xK9z` | `https://www.amazon.com/gp/product/B08N5WRWNW/ref=...` | `2026-09-12T10:30:00Z` | `null`     | `null`     |
+
+ตอบกลับ (`201`):
+```json
+{
+  "code": "aB3xK9z",
+  "short_url": "http://localhost:8080/aB3xK9z",
+  "expires_at": null
+}
+```
+
+_กรณีใส่ `custom_alias` + `expires_at`_ — ส่ง:
+```json
+POST /api/links
+{
+  "original_url": "https://example.com/blog/my-long-article-title",
+  "custom_alias": "myblog",
+  "expires_at": "2026-12-31T00:00:00Z"
+}
+```
+Insert ลง `short_urls`:
+
+| code | original_url | created_date | expires_at | deleted_at |
+|---|---|---|---|---|
+| `myblog` | `https://example.com/blog/my-long-article-title` | `2026-09-12T10:31:00Z` | `2026-12-31T00:00:00Z` | `null` |
+
+ตอบกลับ (`201`):
+```json
+{
+  "code": "myblog",
+  "short_url": "http://localhost:8080/myblog",
+  "expires_at": "2026-12-31T00:00:00Z"
+}
+```
+
+**`short_url` คำนวณจาก `{base_url}/{code}` เสมอ ไม่ได้เก็บลง DB** — สิ่งที่ persist จริง ๆ ในตารางมีแค่ `code` เท่านั้น
+
+**`base_url` ห้าม hardcode — ใช้ Quarkus config property แทน** (ตัดสินใจ 2026-09-13) เพราะค่านี้ต้องเปลี่ยนตาม environment (dev ใช้ `localhost`, prod ใช้โดเมนจริง) โดยเฉพาะกับ **native image ที่ build ครั้งเดียวแล้วรันหลายที่** — ถ้า hardcode ไว้ในโค้ดต้อง rebuild native binary ใหม่ทุกครั้งที่ deploy คนละ environment ซึ่งเสียเวลามาก (native build ช้ากว่า JVM build เยอะ)
+
+```properties
+# application.properties
+app.base-url=http://localhost:8080
+
+# ทับอัตโนมัติเฉพาะตอน build/run profile "prod" โดยไม่ต้องแก้โค้ดเลย
+%prod.app.base-url=https://your-real-domain.com
+```
+
+```java
+@ApplicationScoped
+public class LinkService {
+
+    @ConfigProperty(name = "app.base-url")
+    String baseUrl;
+
+    String buildShortUrl(String code) {
+        return baseUrl + "/" + code;
+    }
+}
+```
+
+ข้อดีอีกอย่างของทางนี้: ยังทับค่าได้ตอน runtime ผ่าน environment variable (`APP_BASE_URL=https://...`) โดยไม่ต้อง rebuild เลยด้วยซ้ำ — สำคัญมากสำหรับ native binary ที่ compile ค่าคงที่ในโค้ดตายตัวเข้าไปในไฟล์ binary ไม่ได้ถ้าอยากเปลี่ยนทีหลัง
+
+หลังจากนี้ถ้าใครเปิด `http://localhost:8080/aB3xK9z` ก็จะเข้า flow `GET /{code}` ด้านล่าง → lookup แถวนี้ → ตอบ `302` ไป `original_url` ทันที
 
 ```mermaid
 sequenceDiagram
@@ -86,7 +186,7 @@ sequenceDiagram
         DB-->>API: 409 ถ้าชน
     else ไม่มี custom_alias
         loop retry สูงสุด 3 ครั้ง
-            API->>API: generate random base62 code
+            API->>API: SecureRandom.nextInt() x7 → base62 code
             API->>DB: insert
         end
     end

@@ -6,7 +6,99 @@
   "hideUnresolved": false,
   "showOrphans": true,
   "collapse-color-groups": true,
-  "colorGroups": [],
+  "colorGroups": [
+    {
+      "query": "path:\"Quarkus\"",
+      "color": {
+        "a": 1,
+        "rgb": 13316640
+      }
+    },
+    {
+      "query": "path:\"Java\"",
+      "color": {
+        "a": 1,
+        "rgb": 11563545
+      }
+    },
+    {
+      "query": "path:\"Docker\"",
+      "color": {
+        "a": 1,
+        "rgb": 2397933
+      }
+    },
+    {
+      "query": "path:\"CI-CD\"",
+      "color": {
+        "a": 1,
+        "rgb": 8540383
+      }
+    },
+    {
+      "query": "path:\"Cloudflare\"",
+      "color": {
+        "a": 1,
+        "rgb": 16155167
+      }
+    },
+    {
+      "query": "path:\"Angular\"",
+      "color": {
+        "a": 1,
+        "rgb": 16737894
+      }
+    },
+    {
+      "query": "path:\"RxJS\"",
+      "color": {
+        "a": 1,
+        "rgb": 11999116
+      }
+    },
+    {
+      "query": "path:\"Typescript\"",
+      "color": {
+        "a": 1,
+        "rgb": 3242182
+      }
+    },
+    {
+      "query": "path:\"Zoom\"",
+      "color": {
+        "a": 1,
+        "rgb": 2985215
+      }
+    },
+    {
+      "query": "path:\"setup project\"",
+      "color": {
+        "a": 1,
+        "rgb": 16766720
+      }
+    },
+    {
+      "query": "path:\"Redis\"",
+      "color": {
+        "a": 1,
+        "rgb": 14432301
+      }
+    },
+    {
+      "query": "path:\"RabbitMQ\"",
+      "color": {
+        "a": 1,
+        "rgb": 16737792
+      }
+    },
+    {
+      "query": "path:\"Greenhouse\"",
+      "color": {
+        "a": 1,
+        "rgb": 2031360
+      }
+    }
+  ],
   "collapse-display": true,
   "showArrow": false,
   "textFadeMultiplier": 0,
@@ -17,6 +109,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 1.0000000000000135,
+  "scale": 0.7514342322277702,
   "close": true
 }

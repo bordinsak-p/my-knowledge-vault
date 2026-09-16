@@ -18,23 +18,28 @@ created: 2026-08-18
 
 ## โน้ตในนี้
 
-| โน้ต | ว่าด้วย | สถานะ |
-|---|---|---|
-| [[Quarkus Hibernate]] | Hibernate 5→6, type mapping, transaction/persistence context, N+1, bulk insert, multitenancy, native | ✅ |
-| [[Quarkus Flyway]] | schema history, ชื่อไฟล์ V/R, baseline, callback, multi-datasource, zero-downtime (expand/contract) | ✅ |
-| [[Quarkus EntityManager]] | สไตล์การเขียนแบบไม่ผ่าน Panache — lifecycle, persist/merge, query 4 แบบ, native query + การดัก null, pagination trap | ✅ |
-| [[Quarkus Panache]] | Active record vs repository, query syntax, ข้อจำกัด, ทิศทาง Jakarta Data | ✅ |
-| [[Quarkus Build]] | JVM vs native, fast-jar, container build, Dockerfile, build-time config | ✅ |
-| [[Quarkus Redis]] | `quarkus-cache` vs `quarkus-redis-client`, data structure, cache-aside, distributed lock, rate limit, idempotency, Dev Services | ✅ |
-| [[Quarkus REST Client]] | `@RegisterRestClient`, configKey, header, exception mapper, timeout/retry/circuit breaker, multipart, token propagation | ✅ |
-| [[Quarkus HTTP Methods]] | GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS ครบ, safe/idempotent/cacheable, annotation ใน Quarkus, status code คู่กัน | ✅ |
-| [[Quarkus MIME Types]] | media type มีอะไรบ้าง, `@Produces`/`@Consumes`, content negotiation, multipart, streaming, 415 vs 406 | ✅ |
-| [[Quarkus WebSocket]] | classic vs websockets-next, ตัวอย่างห้องแชทเต็ม, broadcast, path param, กับดัก, เริ่มลองยังไง | ✅ |
-| [[Quarkus Keycloak]] | Keycloak + Angular + Quarkus OIDC ครบวงจร, CORS/preflight, service-to-service, `@TestSecurity`, เริ่มลองยังไง | ✅ |
-| [[Quarkus Testing]] | `@QuarkusTest`, REST Assured, `@TestTransaction`, `@InjectMock`, Dev Services, เอาเทสที่ comment ไว้กลับมารัน | ✅ |
-| [[Quarkus Health Check]] | liveness vs readiness vs startup, เขียน check เอง, ผูกกับ k8s probe, management port | ✅ |
-| [[Quarkus Logging]] | `level` vs `min-level`, category, ตั้งค่าผ่าน env var บน server, handler, MDC, JSON log | ✅ |
-| [[Quarkus Panache Example]] | โค้ดตัวอย่างครบชุด — entity, repository, service, DTO projection, paging, bulk, test | 📝 example |
+| โน้ต                        | ว่าด้วย                                                                                                                         | สถานะ      |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| [[Quarkus Project Structure]] | โครงสร้างไฟล์ Maven มาตรฐาน, package-by-layer vs package-by-feature, naming convention, resource→service→repository→entity | ✅ |
+| [[Quarkus Config]]          | ลำดับความสำคัญของ config source, profile (`%dev`/`%prod`/`%test`/custom), `@ConfigMapping`, build-time vs runtime config         | ✅          |
+| [[Quarkus Thread Pool]]     | `@Scheduled`, `ManagedExecutor`, ทำไม request context ใช้ใน worker thread ไม่ได้, thread pool config, virtual threads             | ✅          |
+| [[Quarkus REST Layer]]      | RESTEasy Classic vs Quarkus REST, smart dispatch, `@Blocking`/`@NonBlocking`, ทำไม block event loop ถึงร้ายแรง, `Uni`/`Multi`     | ✅          |
+| [[Quarkus Hibernate]]       | Hibernate 5→6, type mapping, transaction/persistence context, N+1, bulk insert, multitenancy, native                            | ✅          |
+| [[Quarkus Flyway]]          | schema history, ชื่อไฟล์ V/R, baseline, callback, multi-datasource, zero-downtime (expand/contract)                             | ✅          |
+| [[Quarkus EntityManager]]   | สไตล์การเขียนแบบไม่ผ่าน Panache — lifecycle, persist/merge, query 4 แบบ, native query + การดัก null, pagination trap            | ✅          |
+| [[Quarkus Panache]]         | Active record vs repository, query syntax, ข้อจำกัด, ทิศทาง Jakarta Data                                                        | ✅          |
+| [[Quarkus Build]]           | **ขั้นตอนการ build แบบเต็ม** (source→container→deploy), JVM vs native, fast-jar, build-time config                              | ✅          |
+| [[Quarkus Redis]]           | `quarkus-cache` vs `quarkus-redis-client`, data structure, cache-aside, distributed lock, rate limit, idempotency, Dev Services | ✅          |
+| [[Quarkus REST Client]]     | `@RegisterRestClient`, configKey, header, exception mapper, timeout/retry/circuit breaker, multipart, token propagation         | ✅          |
+| [[Quarkus HTTP Methods]]    | GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS ครบ, safe/idempotent/cacheable, annotation ใน Quarkus, status code คู่กัน                | ✅          |
+| [[Quarkus MIME Types]]      | media type มีอะไรบ้าง, `@Produces`/`@Consumes`, content negotiation, multipart, streaming, 415 vs 406                           | ✅          |
+| [[Quarkus WebSocket]]       | classic vs websockets-next, ตัวอย่างห้องแชทเต็ม, broadcast, path param, กับดัก, เริ่มลองยังไง                                   | ✅          |
+| [[Quarkus Keycloak]]        | Keycloak + Angular + Quarkus OIDC ครบวงจร, CORS/preflight, service-to-service, `@TestSecurity`, เริ่มลองยังไง                   | ✅          |
+| [[Quarkus Security]]        | `SecurityIdentityAugmentor`, `@PermissionsAllowed`/`@PermissionChecker`, multi-tenant OIDC (static/dynamic)                     | ✅          |
+| [[Quarkus Testing]]         | `@QuarkusTest`, REST Assured, `@TestTransaction`, `@InjectMock`, Dev Services, เอาเทสที่ comment ไว้กลับมารัน                   | ✅          |
+| [[Quarkus Health Check]]    | liveness vs readiness vs startup, เขียน check เอง, ผูกกับ k8s probe, management port                                            | ✅          |
+| [[Quarkus Logging]]         | `level` vs `min-level`, category, ตั้งค่าผ่าน env var บน server, handler, MDC, JSON log                                         | ✅          |
+| [[Quarkus Panache Example]] | โค้ดตัวอย่างครบชุด — entity, repository, service, DTO projection, paging, bulk, test                                            | 📝 example |
 
 ---
 
@@ -42,10 +47,6 @@ created: 2026-08-18
 
 เรียงตามที่น่าจะได้ใช้จริงก่อน
 
-- **Config & profiles** — `%dev` / `%prod` / `%test`, `@ConfigMapping`, ลำดับความสำคัญของ config source, build-time vs runtime config
-- **Thread pool / background task** — `ManagedExecutor`, `@Scheduled`, และเหตุผลที่ของที่ผูกกับ request context ใช้ใน worker thread ไม่ได้
-- **REST layer (ฝั่ง server)** — RESTEasy Reactive vs classic, blocking vs non-blocking, `@Blocking` (HTTP method พื้นฐานเขียนแล้วที่ [[Quarkus HTTP Methods]])
-- **Security** — custom permission, multi-tenant OIDC ขั้นสูง (พื้นฐาน Keycloak+Angular เขียนแล้วที่ [[Quarkus Keycloak]])
 - **Dev mode** — live reload ทำงานยังไง และเมื่อไหร่ที่มันหลอกเรา
 - **Observability** — metrics, tracing (logging เขียนแล้วที่ [[Quarkus Logging]])
 

@@ -17,9 +17,9 @@ created: 2026-08-18
 
 ## 1. Dockerfile คืออะไร
 
-```
-Dockerfile  ──(docker build)──►  Image  ──(docker run)──►  Container
-   สูตรอาหาร                       อาหารที่ทำเสร็จ            กำลังกินอยู่
+```mermaid
+flowchart LR
+    A["Dockerfile<br/>สูตรอาหาร"] -->|docker build| B["Image<br/>อาหารที่ทำเสร็จ"] -->|docker run| C["Container<br/>กำลังกินอยู่"]
 ```
 
 **Dockerfile คือไฟล์ข้อความธรรมดา** (ไม่มีนามสกุล ชื่อไฟล์ตรง ๆ คือ `Dockerfile`) เขียนเป็นขั้นตอนทีละบรรทัดว่า "เอา base อะไร → ติดตั้งอะไร → copy ไฟล์อะไรเข้าไป → รันคำสั่งอะไรตอนเริ่ม"
@@ -251,14 +251,15 @@ FROM nginx:1.27-alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 ```
 
-```
-Stage 1 (node:20 — ใหญ่ ~1GB)     Stage 2 (nginx:alpine — เล็ก ~50MB)
-┌─────────────────┐               ┌─────────────────┐
-│ npm, build tools │   COPY เฉพาะ  │  แค่ไฟล์ static   │
-│ source code       │──ผลลัพธ์──►  │  ที่ build เสร็จ  │
-│ node_modules      │               │                  │
-└─────────────────┘               └─────────────────┘
-     ถูกทิ้งไปทั้งหมด                  ← image สุดท้ายที่ได้
+```mermaid
+flowchart LR
+    subgraph S1["Stage 1: node:20 — ใหญ่ ~1GB (ถูกทิ้งไปทั้งหมด)"]
+        A["npm, build tools<br/>source code<br/>node_modules"]
+    end
+    subgraph S2["Stage 2: nginx:alpine — เล็ก ~50MB (image สุดท้ายที่ได้)"]
+        B["แค่ไฟล์ static ที่ build เสร็จ"]
+    end
+    A -->|"COPY เฉพาะผลลัพธ์"| B
 ```
 
 **`AS build`** ตั้งชื่อ stage แรกว่า `build` แล้ว **`COPY --from=build`** ใน stage ที่สองดึงเฉพาะไฟล์ผลลัพธ์ที่ต้องการมา — เครื่องมือ build ทั้งหมดใน stage แรกถูกทิ้งไปเลย ไม่ติดไปกับ image สุดท้าย

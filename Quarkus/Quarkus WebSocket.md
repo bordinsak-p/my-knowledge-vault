@@ -18,16 +18,32 @@ created: 2026-08-18
 
 ## 1. ก่อนอื่น — ทำไมไม่ใช้ HTTP ธรรมดา
 
-```
-HTTP (request/response)              WebSocket (persistent connection)
+**HTTP (request/response)** — เปิด-ปิดสายทุกครั้ง
 
-client ──request──► server           client ══════ handshake ══════► server
-client ◄─response── server                    (เปิดสายค้างไว้)
-        (สายปิด)                      client ◄──message── server
-                                       client ──message──► server
-client ──request──► server            client ◄──message── server
-client ◄─response── server                    (ส่งได้ทั้งสองทาง ตลอดเวลา)
-        (สายปิด)                              (จนกว่าจะปิดเอง)
+```mermaid
+sequenceDiagram
+    participant C as client
+    participant S as server
+    C->>S: request
+    S-->>C: response
+    Note over C,S: สายปิด
+    C->>S: request
+    S-->>C: response
+    Note over C,S: สายปิด
+```
+
+**WebSocket (persistent connection)** — เปิดสายค้างไว้ ส่งได้ทั้งสองทางตลอดเวลา
+
+```mermaid
+sequenceDiagram
+    participant C as client
+    participant S as server
+    C->>S: handshake
+    Note over C,S: เปิดสายค้างไว้
+    S-->>C: message
+    C->>S: message
+    S-->>C: message
+    Note over C,S: ส่งได้ทั้งสองทาง ตลอดเวลา จนกว่าจะปิดเอง
 ```
 
 **ถ้าไม่มี WebSocket แล้วอยากได้ real-time** ทางเลือกคือ **polling** — ให้ client ถามซ้ำ ๆ ทุกไม่กี่วินาที ("มีอะไรใหม่ไหม") ซึ่งเปลืองทั้ง network และทำให้ข้อมูลช้ากว่าที่ควรเสมอ (ต้องรอถึงรอบถัดไป) WebSocket แก้ตรงนี้โดยให้ server **ส่งเองได้ทันทีที่มีเหตุการณ์เกิดขึ้น** ไม่ต้องรอถูกถาม
@@ -130,10 +146,10 @@ public class ChatSocket {
 
 **สี่ annotation ที่ต้องมี — ครอบ lifecycle ทั้งหมดของการเชื่อมต่อหนึ่งเส้น**
 
-```
-เปิดสาย ──► @OnOpen ──► @OnMessage (ซ้ำได้หลายครั้ง) ──► @OnClose
-                                    │
-                                    └──► @OnError (ถ้าพังระหว่างทาง)
+```mermaid
+flowchart LR
+    A[เปิดสาย] --> B["@OnOpen"] --> C["@OnMessage<br/>(ซ้ำได้หลายครั้ง)"] --> D["@OnClose"]
+    C -.->|ถ้าพังระหว่างทาง| E["@OnError"]
 ```
 
 **`sessions` map คือหัวใจของแบบ classic** — ไม่มี broadcast ให้ในตัว ต้องเก็บ `Session` ของทุกคนที่เชื่อมต่ออยู่เอง แล้ววนส่งเองตอนอยากกระจายข้อความ **ต้องเป็น `ConcurrentHashMap`** เพราะหลาย connection เข้า-ออกพร้อมกันได้ตลอดเวลา ใช้ `HashMap` ธรรมดาจะพังแบบสุ่ม ๆ ตอนมีคนใช้เยอะ

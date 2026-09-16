@@ -19,24 +19,18 @@ created: 2026-08-18
 
 ## 1. ภาพรวมก่อนลงมือ — ใครทำหน้าที่อะไร
 
-```
-┌─────────────┐        1. ยังไม่ login            ┌─────────────┐
-│   Angular   │ ─────────────────────────────►  │  Keycloak   │
-│  (browser)  │                                 │(auth server)│
-│             │ ◄─────────────────────────────  │             │
-└─────────────┘   2. redirect ไปหน้า login       └─────────────┘
-      │                                               │
-      │  3. กรอก user/pass ที่หน้า Keycloak (ไม่ใช่ที่ Angular!)
-      │                                               │
-      │  4. Keycloak ส่ง token กลับมาที่ Angular          │
-      │◄──────────────────────────────────────────────┘
-      │
-      │  5. แนบ token ไปกับทุก request
-      ▼
-┌─────────────┐
-│   Quarkus   │  6. ตรวจลายเซ็นของ token กับ Keycloak
-│  (API)      │     (ไม่ต้องถาม Keycloak ทุกครั้ง — ตรวจด้วยกุญแจสาธารณะเอง)
-└─────────────┘
+```mermaid
+sequenceDiagram
+    participant A as Angular (browser)
+    participant K as Keycloak (auth server)
+    participant Q as Quarkus (API)
+
+    A->>K: 1. ยังไม่ login
+    K-->>A: 2. redirect ไปหน้า login
+    Note over A,K: 3. กรอก user/pass ที่หน้า Keycloak (ไม่ใช่ที่ Angular!)
+    K-->>A: 4. ส่ง token กลับมาที่ Angular
+    A->>Q: 5. แนบ token ไปกับทุก request
+    Note over Q: 6. ตรวจลายเซ็นของ token<br/>(ไม่ต้องถาม Keycloak ทุกครั้ง — ตรวจด้วยกุญแจสาธารณะเอง)
 ```
 
 **สิ่งที่ควรจำจากภาพนี้:** ผู้ใช้กรอก username/password **ที่หน้าเว็บของ Keycloak เท่านั้น** ไม่ใช่ที่ฟอร์มของ Angular — Angular แค่ redirect ไปแล้วรอรับ token กลับมา นี่คือหัวใจของ OIDC: **แอปของเราไม่เคยเห็นรหัสผ่านจริงเลย**

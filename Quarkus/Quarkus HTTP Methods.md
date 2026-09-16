@@ -19,18 +19,14 @@ created: 2026-08-18
 
 ## 1. มีอะไรบ้าง — ครบทั้ง 9 ตัว
 
-```
-              READ-ONLY (Safe)                    เปลี่ยนสถานะ (Unsafe)
-        ┌─────────────────────────┐         ┌──────────────────────────┐
-        │  GET  HEAD  OPTIONS  TRACE │         │ POST  PUT  PATCH  DELETE │
-        └─────────────────────────┘         └──────────────────────────┘
-                                                          │
-                                              ┌───────────┴────────────┐
-                                          idempotent               ไม่ idempotent
-                                       (ยิงซ้ำผลเหมือนเดิม)        (ยิงซ้ำผลเปลี่ยน)
-                                    ┌──────┴──────┐                    │
-                                  PUT          DELETE                POST
-                                (แทนที่ทั้งก้อน)  (ลบ)          (สร้าง/สั่งงาน)
+```mermaid
+flowchart TD
+    ReadOnly["READ-ONLY (Safe)<br/>GET · HEAD · OPTIONS · TRACE"]
+    Unsafe["เปลี่ยนสถานะ (Unsafe)<br/>POST · PUT · PATCH · DELETE"]
+    Unsafe --> Idem{idempotent?}
+    Idem -->|"ใช่ (ยิงซ้ำผลเหมือนเดิม)"| PUT["PUT<br/>แทนที่ทั้งก้อน"]
+    Idem -->|"ใช่ (ยิงซ้ำผลเหมือนเดิม)"| DELETE["DELETE<br/>ลบ"]
+    Idem -->|"ไม่ (ยิงซ้ำผลเปลี่ยน)"| POST["POST<br/>สร้าง/สั่งงาน"]
 ```
 
 | Method | ทำอะไร | ตัวอย่างใช้จริง |

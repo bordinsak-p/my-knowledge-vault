@@ -20,16 +20,13 @@ created: 2026-08-18
 
 Flyway สร้างตารางพิเศษชื่อ `flyway_schema_history` เก็บว่า **migration ตัวไหนรันไปแล้วบ้าง**
 
-```
-flyway_schema_history
-┌─────────────┬──────────┬───────────────────┬──────────┬─────────────────────┐
-│ installed_rank │ version │ description     │ checksum │ installed_on        │
-├─────────────┼──────────┼───────────────────┼──────────┼─────────────────────┤
-│ 1           │ 1       │ create product     │ 8f3a2c1  │ 2026-01-10 09:00:00 │
-│ 2           │ 2       │ add category       │ 1b9e7f4  │ 2026-02-15 14:20:00 │
-│ 3           │ 3       │ add order table    │ ac02de9  │ 2026-08-18 10:05:00 │
-└─────────────┴──────────┴───────────────────┴──────────┴─────────────────────┘
-```
+**ตาราง `flyway_schema_history`**
+
+| installed_rank | version | description | checksum | installed_on |
+|---|---|---|---|---|
+| 1 | 1 | create product | 8f3a2c1 | 2026-01-10 09:00:00 |
+| 2 | 2 | add category | 1b9e7f4 | 2026-02-15 14:20:00 |
+| 3 | 3 | add order table | ac02de9 | 2026-08-18 10:05:00 |
 
 ทุกครั้งที่แอปสตาร์ต Flyway จะ:
 
@@ -209,16 +206,11 @@ quarkus.flyway.baseline-version=1
 quarkus.flyway.baseline-description=existing schema
 ```
 
-```
-DB เดิม (มีตารางอยู่แล้ว 50 ตาราง ไม่มี flyway_schema_history)
-         │
-         │ baseline-on-migrate=true
-         ▼
-Flyway สร้าง flyway_schema_history แล้วใส่ baseline record
-"เวอร์ชัน 1 = สภาพปัจจุบัน ถือว่าผ่านแล้ว ไม่ต้องรันอะไรเพิ่ม"
-         │
-         ▼
-migration ที่เขียนใหม่ (V2 ขึ้นไป) ถึงจะเริ่มรันจากตรงนี้
+```mermaid
+flowchart TD
+    A["DB เดิม (มีตารางอยู่แล้ว 50 ตาราง ไม่มี flyway_schema_history)"]
+    A -->|"baseline-on-migrate=true"| B["Flyway สร้าง flyway_schema_history แล้วใส่ baseline record<br/>'เวอร์ชัน 1 = สภาพปัจจุบัน ถือว่าผ่านแล้ว ไม่ต้องรันอะไรเพิ่ม'"]
+    B --> C["migration ที่เขียนใหม่ (V2 ขึ้นไป) ถึงจะเริ่มรันจากตรงนี้"]
 ```
 
 **สำคัญมาก:** `baseline-on-migrate=true` ควรเปิดแค่ตอนเริ่มใช้ Flyway ครั้งแรกเท่านั้น จากนั้นควรปิดกลับ ไม่งั้นถ้ามีใครลบ history table โดยไม่ตั้งใจ Flyway จะ baseline ใหม่เงียบ ๆ แทนที่จะ error เตือน
@@ -273,18 +265,12 @@ quarkus.flyway.callbacks=org.acme.PreMigrateSafetyCheck
 
 **migration ที่ fail ตอน startup = แอปไม่ขึ้นเลย ไม่ใช่แค่ endpoint นั้นพัง**
 
-```
-deploy version ใหม่
-      │
-      ▼
-Flyway เริ่ม migrate ตอน startup
-      │
-      ├── สำเร็จ → แอป start ต่อปกติ
-      │
-      └── ล้มเหลว (เช่น timeout เพราะตารางใหญ่, constraint ชนกับข้อมูลเดิม)
-              │
-              ▼
-      แอปทั้งตัวไม่ start — 502/503 ทันที ไม่มี health endpoint ให้เช็คด้วยซ้ำ
+```mermaid
+flowchart TD
+    A["deploy version ใหม่"] --> B["Flyway เริ่ม migrate ตอน startup"]
+    B -->|สำเร็จ| C["แอป start ต่อปกติ"]
+    B -->|"ล้มเหลว (เช่น timeout เพราะตารางใหญ่, constraint ชนกับข้อมูลเดิม)"| D["แอปทั้งตัวไม่ start — 502/503 ทันที<br/>ไม่มี health endpoint ให้เช็คด้วยซ้ำ"]
+    style D fill:#b91c1c,color:#fff
 ```
 
 **สิ่งที่ควรทำก่อน migration ที่เสี่ยงจะรันบน prod**
@@ -300,13 +286,11 @@ Flyway เริ่ม migrate ตอน startup
 
 ปัญหา: เปลี่ยนชื่อคอลัมน์หรือย้ายข้อมูลไปโครงสร้างใหม่ ระหว่างที่ deploy หลาย instance พร้อมกัน โค้ดเวอร์ชันเก่ากับใหม่ต้องรันคู่กันได้ชั่วคราว ไม่งั้น instance เก่าจะพังทันทีที่ schema เปลี่ยน
 
-```
-Deploy 1 (Expand)     Deploy 2 (Migrate data)    Deploy 3 (Contract)
-──────────────────    ─────────────────────      ────────────────────
-เพิ่มคอลัมน์ใหม่        โค้ดใหม่เขียนคอลัมน์ใหม่      ลบคอลัมน์เก่า
-คอลัมน์เก่ายังอยู่        คอลัมน์เก่ายังอยู่ (เผื่อ       (ทำเมื่อมั่นใจว่า
-โค้ดเก่ายังใช้ได้         ต้อง rollback)               ไม่มีใครใช้เก่าแล้ว)
-```
+| Deploy 1 (Expand) | Deploy 2 (Migrate data) | Deploy 3 (Contract) |
+|---|---|---|
+| เพิ่มคอลัมน์ใหม่ | โค้ดใหม่เขียนคอลัมน์ใหม่ | ลบคอลัมน์เก่า |
+| คอลัมน์เก่ายังอยู่ | คอลัมน์เก่ายังอยู่ (เผื่อต้อง rollback) | (ทำเมื่อมั่นใจว่าไม่มีใครใช้เก่าแล้ว) |
+| โค้ดเก่ายังใช้ได้ | | |
 
 ```sql
 -- V10__expand_add_email_normalized.sql  (deploy พร้อมโค้ดที่ยังอ่าน/เขียนคอลัมน์เก่า)

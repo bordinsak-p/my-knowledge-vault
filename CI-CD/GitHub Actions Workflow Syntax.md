@@ -130,12 +130,22 @@ jobs:
       - run: echo "deploy ${{ needs.build.outputs.version }}"
 ```
 
+```mermaid
+flowchart LR
+    subgraph NoNeeds["ไม่มี needs — รันพร้อมกันหมด"]
+        direction LR
+        b1[build]
+        t1[test]
+        d1[deploy]
+    end
 ```
-ไม่มี needs                    มี needs: build
-──────────────                ──────────────
-build ──┐                     build ──► deploy
-test  ──┼─ รันพร้อมกันหมด              (deploy รอ build เสร็จก่อน)
-deploy ─┘
+
+```mermaid
+flowchart LR
+    subgraph WithNeeds["มี needs: build — deploy รอ build เสร็จก่อน"]
+        direction LR
+        b2[build] --> d2[deploy]
+    end
 ```
 
 **ค่าเริ่มต้นของ job คือรันขนานกันทั้งหมด** — ถ้าต้องมีลำดับก่อนหลัง ต้องใส่ `needs` เอง ไม่งั้น `deploy` อาจเริ่มก่อน `build` เสร็จ
@@ -159,14 +169,13 @@ jobs:
       - run: npm test
 ```
 
-```
-matrix.node × matrix.os = 3 × 2 = 6 jobs รันขนานกันทั้งหมด
+`matrix.node × matrix.os = 3 × 2 = 6 jobs รันขนานกันทั้งหมด`
 
-         ubuntu-latest    windows-latest
-node 18      ✓                 ✓
-node 20      ✓                 ✓
-node 22      ✓                 ✓
-```
+| | ubuntu-latest | windows-latest |
+|---|:---:|:---:|
+| node 18 | ✓ | ✓ |
+| node 20 | ✓ | ✓ |
+| node 22 | ✓ | ✓ |
 
 **ใช้เมื่อต้องพิสูจน์ว่าโค้ดใช้ได้กับหลายสภาพแวดล้อมจริง** — ไม่ต้องเขียน job ซ้ำ 6 รอบเอง
 
@@ -199,11 +208,11 @@ steps:
   - run: mvn install
 ```
 
-```
-key ตรงเป๊ะ           → cache hit เต็ม ๆ ไม่ต้องโหลดอะไรใหม่เลย
-key ไม่ตรง แต่ restore-keys ตรง → ได้ cache เก่ามาเป็นฐาน แล้วโหลดเฉพาะส่วนต่าง
-ไม่มี key ไหนตรงเลย    → cache miss โหลดใหม่หมด แล้วเก็บ cache ใหม่ไว้ให้รอบหน้า
-```
+| เงื่อนไข | ผลลัพธ์ |
+|---|---|
+| key ตรงเป๊ะ | cache hit เต็ม ๆ ไม่ต้องโหลดอะไรใหม่เลย |
+| key ไม่ตรง แต่ restore-keys ตรง | ได้ cache เก่ามาเป็นฐาน แล้วโหลดเฉพาะส่วนต่าง |
+| ไม่มี key ไหนตรงเลย | cache miss โหลดใหม่หมด แล้วเก็บ cache ใหม่ไว้ให้รอบหน้า |
 
 **`hashFiles('**/pom.xml')` คือกลไกสำคัญ** — key เปลี่ยนก็ต่อเมื่อ `pom.xml` เปลี่ยน (มี dependency ใหม่) ถ้าโค้ดเปลี่ยนแต่ dependency เดิม cache ยังใช้ได้อยู่
 

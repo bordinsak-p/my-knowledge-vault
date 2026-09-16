@@ -93,20 +93,16 @@ public class ProductService {
 
 ## 3. สถานะของ entity — เข้าใจอันนี้แล้วเรื่องอื่นง่ายหมด
 
-```
-  new Product(...)
-        │
-        │ persist()
-        ▼
-   ┌─────────┐  find() / query   ┌──────────┐
-   │ MANAGED │◄──────────────────│    DB    │
-   └────┬────┘                   └──────────┘
-        │  ▲                          ▲
- remove()│  │merge()                  │ flush / commit
-        ▼  │                          │
-   ┌─────────┐   จบทรานแซกชัน   ┌──────────┐
-   │ REMOVED │   detach()/clear()│ DETACHED │
-   └─────────┘◄─────────────────└──────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> Transient: new Product(...)
+    Transient --> Managed: persist()
+    DB --> Managed: find() / query
+    Managed --> DB: flush / commit
+    Managed --> Removed: remove()
+    Managed --> Detached: จบทรานแซกชัน (detach()/clear())
+    Detached --> Managed: merge()
+    Removed --> [*]
 ```
 
 | สถานะ | แปลว่า | แก้ค่าแล้วบันทึกไหม |

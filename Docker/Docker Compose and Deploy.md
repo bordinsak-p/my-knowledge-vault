@@ -149,14 +149,12 @@ services:
       retries: 5
 ```
 
+```mermaid
+flowchart LR
+    A["db เริ่ม container"] --> B["healthcheck เริ่มตรวจทุก 5 วิ"] --> C["ตรวจผ่าน → 'healthy'"] --> D["api ค่อยเริ่ม"]
 ```
-db เริ่ม container ──► healthcheck เริ่มตรวจทุก 5 วิ ──► ตรวจผ่าน ──► "healthy"
-                                                                          │
-api รอตรงนี้ ◄───────────────────────────────────────────────────────────┘
-    │
-    ▼
-api ค่อยเริ่ม
-```
+
+`api` รอสถานะ `healthy` จาก `db` ก่อนถึงจะเริ่ม
 
 ---
 
@@ -196,10 +194,11 @@ Compose อ่านไฟล์ `.env` ในโฟลเดอร์เดี�
 
 ## 6. เตรียม image เพื่อ deploy — Registry คืออะไร
 
-```
-เครื่องเรา                    Registry (เช่น Docker Hub)              server จริง
-─────────                    ──────────────────                    ────────
-docker build ──► image        docker push ──► เก็บไว้กลาง ──► docker pull ──► รัน
+```mermaid
+flowchart LR
+    A["เครื่องเรา<br/>docker build"] --> B["image"]
+    B -->|docker push| C["Registry (เช่น Docker Hub)<br/>เก็บไว้กลาง"]
+    C -->|docker pull| D["server จริง<br/>รัน"]
 ```
 
 **Registry คือที่เก็บ image กลาง** (แบบเดียวกับที่ git repository เป็นที่เก็บโค้ดกลาง) — build image บนเครื่องเราแล้ว push ขึ้นไปเก็บ จากนั้น server ปลายทางค่อย pull ลงมารัน ไม่ต้องส่งไฟล์กันเองผ่านช่องทางอื่น

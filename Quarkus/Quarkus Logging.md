@@ -47,12 +47,17 @@ created: 2026-08-18
 | `FATAL` | FATAL | ทุกอย่างที่ต่ำกว่า |
 | `OFF` | — | ทุกอย่าง |
 
+```mermaid
+flowchart LR
+    T[TRACE] --> D[DEBUG] --> I[INFO] --> W[WARN] --> E[ERROR] --> F[FATAL]
+    style D fill:#2b6cb0,color:#fff
+    style I fill:#2b6cb0,color:#fff
+    style W fill:#b7791f,color:#fff
+    style E fill:#2b6cb0,color:#fff
+    style F fill:#2b6cb0,color:#fff
 ```
-TRACE   DEBUG   INFO   WARN   ERROR   FATAL
-  ·       ·      ·       ·       ·       ·
-          └───────────── level=DEBUG เห็นตั้งแต่ตรงนี้ไปทางขวา ──────────┘
-                         └──── level=WARN เห็นตั้งแต่ตรงนี้ ────┘
-```
+
+`level=DEBUG` เห็นตั้งแต่ DEBUG ไปทางขวาทั้งหมด (DEBUG · INFO · WARN · ERROR · FATAL) — `level=WARN` เห็นแค่ WARN ไปทางขวา (WARN · ERROR · FATAL) ดูตารางเต็มด้านบน
 
 **ไม่มีวิธีเลือกเฉพาะช่วง** เช่น "เอาแค่ DEBUG กับ INFO แต่ไม่เอา ERROR" ทำไม่ได้ด้วย config ปกติ เพราะกลไกมันเป็นเพดานล่างอย่างเดียว — ถ้าจำเป็นจริง ๆ ต้องเขียน custom filter เอง ซึ่งแทบไม่มีเหตุผลให้ทำ
 
@@ -60,28 +65,21 @@ TRACE   DEBUG   INFO   WARN   ERROR   FATAL
 
 **นี่คือสาเหตุอันดับหนึ่งที่ "ตั้ง DEBUG แล้วยังไม่เห็น log"** — คนมักตั้งชั้นเดียวแล้วคิดว่าจบ
 
-```
-ข้อความ DEBUG ถูกเขียนในโค้ด
-        │
-        ▼
-┌──────────────────────────────┐
-│ ด่าน 1 · min-level            │  build time — โค้ดถูกสร้างไว้ไหม
-│ quarkus.log.min-level        │  ต่ำกว่านี้ = ถูกตัดทิ้งตอนคอมไพล์
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│ ด่าน 2 · level ของ logger     │  runtime — category นี้เปิดถึงระดับไหน
-│ quarkus.log.level            │  ใช้ค่าของ category ที่เจาะจงที่สุด
-│ quarkus.log.category."x".level│
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│ ด่าน 3 · level ของ handler    │  runtime — ปลายทางยอมรับถึงระดับไหน
-│ quarkus.log.console.level    │  console / file / syslog แยกกันคนละค่า
-│ quarkus.log.file.level       │
-└──────────────┬───────────────┘
-               ▼
-          เห็นใน log
+```mermaid
+flowchart TD
+    Start["ข้อความ DEBUG ถูกเขียนในโค้ด"] --> Gate1
+    subgraph Gate1["ด่าน 1 · min-level"]
+        G1["quarkus.log.min-level<br/>build time — โค้ดถูกสร้างไว้ไหม<br/>ต่ำกว่านี้ = ถูกตัดทิ้งตอนคอมไพล์"]
+    end
+    Gate1 --> Gate2
+    subgraph Gate2["ด่าน 2 · level ของ logger"]
+        G2["quarkus.log.level / quarkus.log.category.'x'.level<br/>runtime — category นี้เปิดถึงระดับไหน<br/>ใช้ค่าของ category ที่เจาะจงที่สุด"]
+    end
+    Gate2 --> Gate3
+    subgraph Gate3["ด่าน 3 · level ของ handler"]
+        G3["quarkus.log.console.level / quarkus.log.file.level<br/>runtime — ปลายทางยอมรับถึงระดับไหน<br/>console / file / syslog แยกกันคนละค่า"]
+    end
+    Gate3 --> End["เห็นใน log"]
 ```
 
 ตัวอย่างที่ตั้งแล้วยังไม่เห็น เพราะตกด่านที่ 3

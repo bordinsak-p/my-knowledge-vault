@@ -37,7 +37,103 @@ created: 2026-08-18
 
 ---
 
-## 2. Build แบบ JVM
+## 2. ขั้นตอนการ build แบบเต็ม — จาก source จนได้ container พร้อมรัน
+
+ภาพรวมทั้งเส้นทาง ก่อนลงรายละเอียดแต่ละขั้นในหัวข้อถัดไป
+
+```mermaid
+flowchart TD
+    A["① เขียนโค้ด"] --> B["② เลือกโหมด"]
+    B -->|JVM: เร็ว ใช้ตอน dev/staging| C["③ รัน build command ให้ตรงโหมด + profile"]
+    B -->|Native: ช้า ใช้ตอน deploy จริง| C
+    C --> D["④ ตรวจผลลัพธ์ก่อนไปต่อ<br/>(อย่าเชื่อแค่ 'build เขียว')"]
+    D --> E["⑤ ห่อเป็น container image<br/>(docker build)"]
+    E --> F["⑥ รัน image จริงทดสอบ<br/>(ไม่ใช่แค่ jar/binary เฉย ๆ)"]
+    F --> G["⑦ push ขึ้น registry แล้ว deploy"]
+```
+
+### ① เขียนโค้ด — ไม่มีอะไรพิเศษ
+
+โค้ด Java ปกติ ยังไม่มีผลกับ build จนกว่าจะถึงขั้นตอนถัดไป
+
+### ② เลือกโหมด — ตัดสินจากตารางข้อ 1
+
+**อย่าลังเลถ้าไม่ชัวร์ — เริ่มด้วย JVM เสมอ** JVM build เร็ว (~1 นาที) debug ง่าย เหมาะกับระหว่างพัฒนาและ staging
+ขยับไป native เฉพาะตอนจะ deploy จริง หรือกำลังจะทดสอบว่า native ทำงานถูกก่อน deploy
+
+### ③ รัน build command
+
+```bash
+# JVM
+mvn clean package
+
+# Native (ต้องมี container runtime เช่น Docker)
+mvn clean package -Pnative -Dquarkus.native.container-runtime=docker -Dquarkus.profile=prod -DskipTests=true
+```
+
+**ระบุ `-Dquarkus.profile=prod` ทุกครั้งที่ build ของจริงที่จะ deploy** ไม่ใช่แค่ตอน native — เหตุผลอยู่ในข้อ 4 ด้านล่าง (build-time config) ถ้าลืม artifact จะจำค่าของ dev ติดไปด้วย
+
+**เวลาที่ควรเผื่อ:** JVM ~1 นาที, native **10-30 นาที** และกิน RAM 8-16 GB ระหว่าง build — ถ้าเครื่อง build มี RAM จำกัด ให้เผื่อเวลาไว้เยอะกว่าปกติ หรือลดจำนวน build ที่รันพร้อมกัน
+
+### ④ ตรวจผลลัพธ์ก่อนไปต่อ — ขั้นที่คนข้ามบ่อยที่สุด
+
+```bash
+# JVM — ต้องมีไฟล์นี้
+ls target/quarkus-app/quarkus-run.jar
+
+# Native — ต้องมีไฟล์ที่รันได้ (นามสกุลลงท้าย -runner)
+ls target/*-runner
+```
+
+**"build ผ่าน" (exit code 0) ไม่ได้แปลว่า artifact ใช้งานได้จริง** โดยเฉพาะ native ที่ GraalVM ไม่รู้ว่าโค้ดจะถูกเรียกยังไงตอน runtime (ดูข้อ 6) — **รันสั้น ๆ ทดสอบก่อนเสมอ** อย่าเพิ่งไปขั้นถัดไป
+
+```bash
+# JVM
+java -jar target/quarkus-app/quarkus-run.jar &
+curl http://localhost:8080/q/health
+kill %1
+
+# Native — รัน binary ตรง ๆ (บน Linux/container เท่านั้น ดูหมายเหตุข้อ 3)
+./target/*-runner &
+curl http://localhost:8080/q/health
+kill %1
+```
+
+ดู [[Quarkus Health Check]] ถ้ายังไม่มี health endpoint ให้เช็คแบบนี้
+
+### ⑤ ห่อเป็น container image
+
+```bash
+docker build -f src/main/docker/Dockerfile.jvm -t myapp:1.0 .
+# หรือ native:
+docker build -f src/main/docker/Dockerfile.native -t myapp:1.0 .
+```
+
+**เลือก Dockerfile ให้ตรงกับ artifact ที่เพิ่ง build** — Dockerfile ฝั่ง JVM คาดหวัง `target/quarkus-app/` ส่วนฝั่ง native คาดหวัง `target/*-runner` ใช้ผิดคู่กันจะ build image ไม่ผ่านหรือได้ image ที่รันไม่ได้ ดู [[Docker Dockerfile]] ถ้ายังไม่เข้าใจกลไก Dockerfile พื้นฐาน (ไฟล์ที่ไม่ถูก copy เข้า image ดูตัวอย่างที่ข้อ 7.3)
+
+### ⑥ รัน image จริงทดสอบ — คนละขั้นกับข้อ ④
+
+ข้อ ④ ทดสอบ jar/binary ตรง ๆ บนเครื่อง build แต่ **container มีสภาพแวดล้อมต่างจากเครื่อง build** (ไม่มี font, path ไฟล์ต่างกัน, user สิทธิ์ต่ำกว่า) — ต้องทดสอบผ่าน container จริงอีกรอบก่อนเชื่อว่าใช้งานได้
+
+```bash
+docker run --rm -p 8080:8080 myapp:1.0
+curl http://localhost:8080/q/health
+```
+
+**อาการที่เจอบ่อยตรงขั้นนี้:** ผ่านข้อ ④ (รันตรง ๆ บนเครื่อง build ได้) แต่พังตรงนี้ — มักเป็นเพราะไฟล์ที่แอปต้องอ่าน (template, font, config) ไม่ได้ถูก `COPY` เข้า image (ดูข้อ 6.3) หรือ path ผูกกับ profile ผิด (ข้อ 5)
+
+### ⑦ push และ deploy
+
+```bash
+docker tag myapp:1.0 myregistry/myapp:1.0
+docker push myregistry/myapp:1.0
+```
+
+รายละเอียดเรื่อง tag/registry/deploy จริงอยู่ที่ [[Docker Compose and Deploy]] และ [[Versioning and Tagging Strategy]] (ตัดสินว่าจะตั้ง tag ยังไงให้ trace กลับได้) — ถ้าทำเป็น pipeline อัตโนมัติ ดู [[GitHub Actions Workflow Syntax]] และ [[Docker Layer Caching in CI]] เพิ่มเรื่อง cache ที่จะช้าลงถ้าไม่ได้ตั้ง CI ให้ถูก
+
+---
+
+## 3. Build แบบ JVM
 
 ```bash
 mvn clean package
@@ -79,7 +175,7 @@ COPY target/quarkus-app/quarkus/ /deployments/quarkus/
 
 ---
 
-## 3. Build แบบ Native
+## 4. Build แบบ Native
 
 ### ทางเลือก: ลง GraalVM เอง หรือ build ในคอนเทนเนอร์
 
@@ -134,7 +230,7 @@ COPY --from=BUILD /etc/fonts         /etc/fonts
 
 ---
 
-## 4. build-time config vs runtime config
+## 5. build-time config vs runtime config
 
 config บางส่วนถูกอบติดไปกับ artifact ตั้งแต่ตอน build **เปลี่ยนตอน deploy ไม่ได้**
 
@@ -162,7 +258,7 @@ RUN ls /work/templates          # ← เช็คตอน build image ว่�
 
 ---
 
-## 5. Native พังตรงไหนบ้าง
+## 6. Native พังตรงไหนบ้าง
 
 GraalVM ทำ **closed-world analysis** — ต้องรู้ตั้งแต่ตอน build ว่าโค้ดไหนถูกเรียกบ้าง
 อะไรที่ตัดสินใจตอน runtime มันมองไม่เห็น แล้ว**ตัดทิ้ง**
@@ -198,9 +294,9 @@ quarkus.native.additional-build-args=\
 
 ---
 
-## 6. กับดักตอนตั้งค่า native build
+## 7. กับดักตอนตั้งค่า native build
 
-### ⚠️ 6.1 property ซ้ำใน `pom.xml` — ตัวสุดท้ายทับหมด
+### ⚠️ 7.1 property ซ้ำใน `pom.xml` — ตัวสุดท้ายทับหมด
 
 `quarkus.native.additional-build-args` เป็น property ตัวเดียว รับค่าเป็น **รายการคั่นด้วยคอมมา**
 คนมักเผลอเขียนแยกเป็นหลาย tag แบบนี้
@@ -233,7 +329,7 @@ quarkus.native.additional-build-args=\
 
 **วิธีเช็คว่า argument ไหนถูกส่งไปจริง:** ดู log ตอน build หาบรรทัดที่ขึ้นต้นว่า `Executing: ... native-image ...` แล้วอ่าน command line ที่แท้จริง
 
-### ⚠️ 6.2 flag เก่าที่ถูกถอดออกจาก GraalVM แล้ว
+### ⚠️ 7.2 flag เก่าที่ถูกถอดออกจาก GraalVM แล้ว
 
 ตัวอย่างที่ยังเจอในบล็อกเก่า ๆ และ copy ต่อกันมา
 
@@ -243,17 +339,17 @@ quarkus.native.additional-build-args=\
 | `--enable-all-security-services` | deprecated ตั้งแต่ GraalVM 21 |
 | `-H:+ReportUnsupportedElementsAtRuntime` | deprecated |
 
-**ระวังลำดับการแก้:** ถ้าโปรเจกต์มีบั๊กข้อ 6.1 อยู่ (flag เก่าไม่เคยถูกส่งไปจริง) แล้วไป "แก้" ด้วยการรวมทุกบรรทัดเข้าด้วยกัน **build จะพังทันที** เพราะ flag เก่าเพิ่งถูกส่งไปจริงเป็นครั้งแรก
+**ระวังลำดับการแก้:** ถ้าโปรเจกต์มีบั๊กข้อ 7.1 อยู่ (flag เก่าไม่เคยถูกส่งไปจริง) แล้วไป "แก้" ด้วยการรวมทุกบรรทัดเข้าด้วยกัน **build จะพังทันที** เพราะ flag เก่าเพิ่งถูกส่งไปจริงเป็นครั้งแรก
 → ต้องล้าง flag ที่เลิกใช้แล้วออกไปพร้อมกันในครั้งเดียว
 
-### 6.3 ไฟล์ที่ต้องติดไปกับ image
+### 7.3 ไฟล์ที่ต้องติดไปกับ image
 
 `COPY` เฉพาะ binary อย่างเดียวไม่พอ ถ้าแอปอ่านไฟล์จากดิสก์ตอน runtime (template, script, config)
 ตรวจว่า Dockerfile copy ครบทุกโฟลเดอร์ที่ config ชี้ไป — ของที่ประกาศใน properties แต่ไม่ได้ copy จะเงียบจนกว่าจะมีคนเรียกใช้
 
 ---
 
-## 7. เวอร์ชันกับชื่อ property
+## 8. เวอร์ชันกับชื่อ property
 
 `quarkus.package.type=native` **deprecated ตั้งแต่ Quarkus 3.8** เปลี่ยนเป็น
 
@@ -266,7 +362,7 @@ quarkus.package.jar.type=fast-jar
 
 ---
 
-## 8. Cheat sheet
+## 9. Cheat sheet
 
 ```bash
 # dev — live reload

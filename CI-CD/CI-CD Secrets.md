@@ -17,11 +17,11 @@ created: 2026-08-18
 
 ## 1. ลำดับความสำคัญที่ควรใช้เสมอ
 
-```
-1. OIDC / workload identity     ← ไม่มี secret ถาวรให้ขโมยเลย (ดีที่สุด)
-2. secret ที่หมุนเวียนอัตโนมัติ    ← ยังเป็น secret แต่มีอายุสั้น
-3. secret แบบเดิม (long-lived)  ← ใช้เฉพาะที่ไม่มีทางเลือกอื่น (3rd-party API key)
-```
+| ลำดับ | วิธี | เหตุผล |
+|---|---|---|
+| 1 | OIDC / workload identity | ไม่มี secret ถาวรให้ขโมยเลย (ดีที่สุด) |
+| 2 | secret ที่หมุนเวียนอัตโนมัติ | ยังเป็น secret แต่มีอายุสั้น |
+| 3 | secret แบบเดิม (long-lived) | ใช้เฉพาะที่ไม่มีทางเลือกอื่น (3rd-party API key) |
 
 **เกณฑ์ตัดสิน:** ถ้าปลายทางรองรับ OIDC (cloud provider ใหญ่ ๆ รองรับหมดแล้ว) ใช้ OIDC เสมอ เก็บ secret ถาวรไว้เฉพาะของที่ไม่รองรับจริง ๆ เช่น API key ของบริการภายนอกเล็ก ๆ
 
@@ -81,15 +81,13 @@ steps:
       aws-region: ap-southeast-1
 ```
 
-```
-Workflow ขอ JWT จาก GitHub ──► ส่งไปแลกกับ Cloud Provider
-                                        │
-                                        ▼
-                          Cloud Provider เช็คว่า JWT นี้มาจาก
-                          repo/branch ที่ตั้งไว้ใน trust policy จริงไหม
-                                        │
-                                        ▼
-                          ออก token ชั่วคราว (อายุนาทีถึงชั่วโมง) กลับมา
+```mermaid
+sequenceDiagram
+    participant GH as GitHub Workflow
+    participant CP as Cloud Provider
+    GH->>CP: ขอ JWT จาก GitHub แล้วส่งไปแลก
+    CP->>CP: เช็คว่า JWT นี้มาจาก repo/branch<br/>ที่ตั้งไว้ใน trust policy จริงไหม
+    CP-->>GH: ออก token ชั่วคราว (อายุนาทีถึงชั่วโมง) กลับมา
 ```
 
 **ไม่มี AWS key ถาวรเก็บอยู่ใน GitHub Secrets เลย** — ต่อให้ secret ทั้ง repo หลุด ก็ไม่มี credential ถาวรให้เอาไปใช้ต่อ เพราะ token ที่ได้มาหมดอายุเร็วและผูกกับเงื่อนไขเฉพาะ (repo ไหน branch ไหน) เท่านั้น

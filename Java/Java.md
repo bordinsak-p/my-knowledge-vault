@@ -20,17 +20,19 @@ created: 2026-08-18
 
 | โน้ต | ว่าด้วย | สถานะ |
 |---|---|---|
+| [[Java Data Type]] | primitive 8 ตัว vs reference, wrapper class, autoboxing, widening/narrowing, Integer cache | ✅ |
+| [[Java Exception]] | checked vs unchecked, try-with-resources, multi-catch, ออกแบบ exception เอง, exception chaining | ✅ |
 | [[Java Record]] | record คืออะไร, compact constructor, ใช้ทำ DTO/projection/value object/sealed result, กับดัก | ✅ |
 | [[Java Date Time]] | เลือกระหว่าง `Date`/`LocalDate`/`LocalDateTime`/`Instant`, ตัวไหนทำวันเพี้ยน, format, กับดัก | ✅ |
+| [[Java Lambda]] | syntax, functional interface, method reference (`::`), effectively final, `this`, checked exception | ✅ |
+| [[Java Stream]] | lazy evaluation, `collect`/`Collectors`, `map` vs `flatMap`, primitive stream, parallel stream | ✅ |
 
 ---
 
 ## แผนที่ความรู้ — ยังไม่ได้เขียน
 
 - **Optional** — ใช้ตอนไหน ไม่ใช้ตอนไหน (อย่าใส่เป็น field หรือ parameter)
-- **Stream API** — operation ที่ใช้บ่อย, `collect` vs `toList()`, เมื่อไหร่ที่ loop ธรรมดาอ่านง่ายกว่า
 - **`equals` / `hashCode`** — สัญญาที่ต้องรักษา และผลตอนเอาไปใส่ `HashMap`/`HashSet`
-- **Exception** — checked vs unchecked, การออกแบบ exception ของตัวเอง
 - **Generics** — wildcard, type erasure, ทำไมบางอย่างเขียนไม่ได้
 - **Concurrency** — `CompletableFuture`, `ExecutorService`, thread safety
 - **Text block** (Java 15+) — เขียน SQL/JSON หลายบรรทัดโดยไม่ต้องต่อ string

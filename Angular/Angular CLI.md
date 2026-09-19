@@ -30,8 +30,8 @@ Angular CLI เป็นเครื่องมือ command line สำหร
 | `ng generate component [name]`<br>`ng g c [name]` | สร้าง component |
 | `ng generate module [name]`<br>`ng g m [name]` | สร้าง module |
 | `ng generate service [name]`<br>`ng g s [name]` | สร้าง service |
-| `ng generate directive [name]` | สร้าง directive |
-| `ng generate pipe [name]` | สร้าง pipe |
+| `ng generate directive [name]`<br>`ng g d [name]` | สร้าง directive |
+| `ng generate pipe [name]`<br>`ng g p [name]` | สร้าง pipe |
 | `ng generate guard [name]` | สร้าง route guard |
 | `ng generate interface [name]` | สร้าง TypeScript interface |
 

@@ -13,6 +13,23 @@ created: 2026-09-16
 
 ---
 
+## 0. สร้างด้วย Angular CLI
+
+```bash
+ng generate pipe truncate
+ng g p truncate              # short alias
+```
+
+ได้ไฟล์ `truncate.pipe.ts` พร้อมโครง `PipeTransform` แบบหัวข้อ 1 ด้านล่างทันที
+
+| flag | default | ผลลัพธ์ |
+|---|---|---|
+| `--standalone` | `true` | pipe แบบ standalone (ค่า default อยู่แล้ว ไม่ต้องใส่เอง) |
+| `--skip-tests` | `false` | ไม่สร้างไฟล์ `.spec.ts` |
+| `--flat` | `true` | ไม่สร้างโฟลเดอร์ย่อยใหม่ วางไฟล์ไว้ระดับบนสุด |
+
+---
+
 ## 1. สร้าง pipe เอง
 
 ```typescript
@@ -107,6 +124,7 @@ export class XPipe implements PipeTransform {
 
 ## 🔗 เกี่ยวข้อง
 
+- [[Angular CLI]] — คำสั่ง `ng generate` อื่น ๆ ทั้งหมด
 - [[Angular Signal Primitives]] — `computed()` มักเป็นทางเลือกที่ดีกว่า impure pipe
 - [[RxJS]] — แนวคิด pipeline/chain แบบเดียวกัน
 

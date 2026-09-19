@@ -13,6 +13,23 @@ created: 2026-09-16
 
 ---
 
+## 0. สร้างด้วย Angular CLI
+
+Angular CLI **ไม่มี schematic แยกสำหรับ CVA โดยเฉพาะ** — ใช้ `ng generate component` สร้าง component ธรรมดา แล้วเพิ่ม `implements ControlValueAccessor` + `providers: [...]` เองตามหัวข้อ 1-2 ด้านล่าง
+
+```bash
+ng generate component star-rating
+ng g c star-rating           # short alias
+```
+
+| flag | default | ผลลัพธ์ |
+|---|---|---|
+| `--standalone` | `true` | component แบบ standalone (ค่า default อยู่แล้ว) |
+| `--skip-tests` | `false` | ไม่สร้างไฟล์ `.spec.ts` |
+| `--style=none` | `css` | ไม่ต้องสร้างไฟล์ stylesheet แยก ถ้าจะเขียน inline |
+
+---
+
 ## 1. Interface ที่ต้อง implement — 4 method
 
 ```typescript
@@ -151,6 +168,7 @@ export class MyComponent implements ControlValueAccessor {
 
 ## 🔗 เกี่ยวข้อง
 
+- [[Angular CLI]] — คำสั่ง `ng generate` อื่น ๆ ทั้งหมด
 - [[Angular Reactive Forms]] — `FormControl`/`Validators` ที่ CVA เข้าไปเชื่อมด้วย
 - [[Angular Component Communication]] — `@Input`/`@Output` พื้นฐานที่ CVA สร้างต่อยอดขึ้นไป
 

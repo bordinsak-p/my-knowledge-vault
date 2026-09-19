@@ -13,6 +13,23 @@ created: 2026-09-16
 
 ---
 
+## 0. สร้างด้วย Angular CLI
+
+```bash
+ng generate directive highlight
+ng g d highlight             # short alias
+```
+
+CLI สร้างโครงเดียวกันทั้ง attribute และ structural directive — ต่างกันที่โค้ดที่เขียนต่อข้างในเท่านั้น (attribute inject `ElementRef`/`Renderer2` เอง, structural inject `TemplateRef`/`ViewContainerRef` เอง ตามหัวข้อ 1 และ 2 ด้านล่าง)
+
+| flag | default | ผลลัพธ์ |
+|---|---|---|
+| `--standalone` | `true` | directive แบบ standalone (ค่า default อยู่แล้ว) |
+| `--skip-tests` | `false` | ไม่สร้างไฟล์ `.spec.ts` |
+| `--prefix` (alias `-p`) | — | เติม prefix หน้า selector เอง (ปกติใช้ prefix จาก `angular.json` อยู่แล้วไม่ต้องใส่) |
+
+---
+
 ## 1. Attribute Directive — เพิ่มพฤติกรรมให้ element เดิม
 
 ```typescript
@@ -158,6 +175,7 @@ export class XDirective {
 
 ## 🔗 เกี่ยวข้อง
 
+- [[Angular CLI]] — คำสั่ง `ng generate` อื่น ๆ ทั้งหมด
 - [[Angular Signal Primitives]] — `effect()` ที่ใช้เชื่อม signal เข้ากับ `ViewContainerRef` ในตัวอย่าง structural directive
 - [[Angular Component Communication]] — `input()` ที่ใช้ตั้งค่า directive จากภายนอก
 

@@ -461,6 +461,7 @@ canActivate: [authGuardFn], data: { roles: ['admin'] }
 
 ## 🔗 เกี่ยวข้อง
 
+- [[Keycloak]] — Keycloak คืออะไร, ใช้ทำอะไรได้บ้างนอกจาก login, OAuth2/OIDC protocol เบื้องหลังแบบไม่ผูก stack
 - [[Quarkus REST Client]] — service-to-service auth ด้วย `quarkus-oidc-client`
 - [[Quarkus HTTP Methods]] — CORS preflight เป็น `OPTIONS` request
 - [[Quarkus Health Check]] — health endpoint ควรเปิดให้เข้าถึงได้โดยไม่ต้อง auth เสมอ

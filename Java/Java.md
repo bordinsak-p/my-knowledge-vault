@@ -26,6 +26,8 @@ created: 2026-08-18
 | [[Java Date Time]] | เลือกระหว่าง `Date`/`LocalDate`/`LocalDateTime`/`Instant`, ตัวไหนทำวันเพี้ยน, format, กับดัก | ✅ |
 | [[Java Lambda]] | syntax, functional interface, method reference (`::`), effectively final, `this`, checked exception | ✅ |
 | [[Java Stream]] | lazy evaluation, `collect`/`Collectors`, `map` vs `flatMap`, primitive stream, parallel stream | ✅ |
+| [[Java Lombok]] | annotation processor ลด boilerplate, `@Data`/`@Builder`/`@Slf4j`, กับดักบน JPA entity | ✅ |
+| [[Java MapStruct]] | map DTO/entity ตอน compile, `@Mapping`/`@MappingTarget`, ใช้คู่กับ Lombok ต้องระวังอะไร | ✅ |
 
 ---
 

@@ -132,6 +132,14 @@ flowchart LR
 
 ---
 
+## 🎯 แนวทางการเริ่มศึกษา
+
+1. **เริ่มต้น** — จำ 4 ชิ้นส่วนหลักให้ขึ้นใจก่อน (Producer → Exchange → Queue → Consumer, ข้อ 1) และเข้าใจว่า **producer ไม่เคยส่งข้อความเข้า queue ตรง ๆ** เสมอ — นี่คือกุญแจของทุกอย่างที่เหลือ
+2. **ลงมือทำจริง** — รัน `docker run -p 5672:5672 -p 15672:15672 rabbitmq:management` (มี management UI ให้ดูข้อความจริงผ่านเบราว์เซอร์) แล้วลองทำ **Direct exchange** ง่ายที่สุดก่อน (ส่ง-รับข้อความเดียวจบ) ค่อยขยับไป Fanout/Topic (ข้อ 2)
+3. **ใช้งานได้คล่อง** — ตั้ง reliability ให้ครบทั้ง 3 อย่าง (durable + persistent + manual ack, ข้อ 3), ทำ Dead Letter Queue ป้องกัน poison message (ข้อ 4.4), และจำไว้เสมอว่า RabbitMQ ไม่ใช่ที่เก็บข้อมูลถาวร
+
+---
+
 ## 6. กับดัก
 
 - **queue โตไม่จำกัดถ้าไม่มี consumer** — ไม่มีใครหยิบข้อความออกเลย memory/disk เต็มได้ ต้องมี monitoring ดูขนาด queue เสมอ

@@ -92,6 +92,48 @@
       }
     },
     {
+      "query": "path:\"Hugging Face\"",
+      "color": {
+        "a": 1,
+        "rgb": 16765470
+      }
+    },
+    {
+      "query": "path:\"Keycloak\"",
+      "color": {
+        "a": 1,
+        "rgb": 47331
+      }
+    },
+    {
+      "query": "path:\"Version Updates\"",
+      "color": {
+        "a": 1,
+        "rgb": 1096065
+      }
+    },
+    {
+      "query": "path:\"Playwright\"",
+      "color": {
+        "a": 1,
+        "rgb": 1936674
+      }
+    },
+    {
+      "query": "path:\"Claude\"",
+      "color": {
+        "a": 1,
+        "rgb": 14251863
+      }
+    },
+    {
+      "query": "path:\"Supabase\"",
+      "color": {
+        "a": 1,
+        "rgb": 4116366
+      }
+    },
+    {
       "query": "path:\"Greenhouse\"",
       "color": {
         "a": 1,
@@ -109,6 +151,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 1.0534979423868562,
+  "scale": 1.2414543899483075,
   "close": true
 }

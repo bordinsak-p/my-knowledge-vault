@@ -70,10 +70,10 @@ agent จะ: เปิด browser จริง → อ่าน accessibility t
 npx @playwright/mcp@latest        # รัน MCP server (ปกติ client เป็นคนเรียกให้เองตาม config)
 ```
 
-| ต้องการ | ใช้ |
-|---|---|
-| เขียน test suite ถาวรที่รันใน CI | [[Playwright]] ปกติ เขียนโค้ดเอง/commit |
-| สำรวจแอป/debug แบบโต้ตอบ | Playwright MCP ผ่าน AI agent |
+| ต้องการ                                         | ใช้                                                  |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| เขียน test suite ถาวรที่รันใน CI                | [[Playwright]] ปกติ เขียนโค้ดเอง/commit              |
+| สำรวจแอป/debug แบบโต้ตอบ                        | Playwright MCP ผ่าน AI agent                         |
 | ให้ AI ช่วยร่าง test เริ่มต้นจาก flow ที่อธิบาย | Playwright MCP → เอาผลลัพธ์ไปขัดต่อใน [[Playwright]] |
 
 ## 🔗 เกี่ยวข้อง

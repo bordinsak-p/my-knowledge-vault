@@ -20,11 +20,11 @@ created: 2026-09-14
 ```java
 List<String> names = List.of("bob", "alice", "carol", "dan");
 
-List<String> result = names.stream()          // ① source
-    .filter(n -> n.length() > 3)               // ② intermediate operation (ทำได้หลายอัน)
-    .map(String::toUpperCase)                   // ② intermediate operation
-    .sorted()                                    // ② intermediate operation
-    .collect(Collectors.toList());               // ③ terminal operation
+List<String> result = names.stream()     // ① source
+    .filter(n -> n.length() > 3)         // ② intermediate operation (ทำได้หลายอัน)
+    .map(String::toUpperCase)            // ② intermediate operation
+    .sorted()                            // ② intermediate operation
+    .collect(Collectors.toList());       // ③ terminal operation
 
 System.out.println(result);
 ```

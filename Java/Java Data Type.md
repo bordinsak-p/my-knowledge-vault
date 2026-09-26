@@ -95,6 +95,8 @@ int[] arr = new int[]{5};     // arr เก็บ "ที่อยู่" ขอ
 | ใช้กับ Generics ได้ไหม | ❌ (`List<int>` ผิด) | ✅ ต้องใช้ wrapper class แทน (ข้อ 5) |
 | อยู่ที่ไหน (แนวคิด) | ติดไปกับตัวแปรโดยตรง | ตัวแปรเก็บแค่ reference, object จริงอยู่บน heap |
 
+**ความต่างนี้ส่งผลตอนใช้จริงหลายเรื่อง** — pass-by-value (ทำไม `swap()` เขียนไม่ได้), `==` กับ String pool, unboxing `null` แล้ว NPE, และ "primitive อยู่บน stack" ที่ไม่จริงเสมอไป (primitive field อยู่บน heap ในตัว object) ดู [[Java Value vs Reference]]
+
 ---
 
 ## 5. Wrapper class — ตอนที่ primitive ต้องกลายเป็น object
@@ -245,6 +247,7 @@ Math.addExact(a, b);
 ## 🔗 เกี่ยวข้อง
 
 - [[Java]] — หน้ารวม
+- [[Java Value vs Reference]] — primitive vs reference ตอนใช้จริง: pass-by-value, String pool, unboxing NPE, memory, Valhalla (ต่อจากโน้ตนี้)
 - [[Java Record]] — field ของ record ก็เป็น type พวกนี้ทั้งนั้น (primitive หรือ reference)
 - [[Java Date Time]] — ตัวอย่างของ reference type ที่ออกแบบมาให้ immutable
 

@@ -21,13 +21,18 @@ created: 2026-08-18
 | โน้ต | ว่าด้วย | สถานะ |
 |---|---|---|
 | [[Java Data Type]] | primitive 8 ตัว vs reference, wrapper class, autoboxing, widening/narrowing, Integer cache | ✅ |
+| [[Java Value vs Reference]] | pass-by-value (ทำไม swap ไม่ได้), aliasing, `==` กับ String pool, unboxing NPE, stack vs heap, ต้นทุน boxing, Valhalla | ✅ |
 | [[Java Exception]] | checked vs unchecked, try-with-resources, multi-catch, ออกแบบ exception เอง, exception chaining | ✅ |
+| [[Java Try Catch]] | ลำดับการทำงาน, ลำดับ `catch`, `finally` ไม่รันเมื่อไหร่, suppressed exception, precise rethrow, `InterruptedException` | ✅ |
 | [[Java Record]] | record คืออะไร, compact constructor, ใช้ทำ DTO/projection/value object/sealed result, กับดัก | ✅ |
 | [[Java Date Time]] | เลือกระหว่าง `Date`/`LocalDate`/`LocalDateTime`/`Instant`, ตัวไหนทำวันเพี้ยน, format, กับดัก | ✅ |
 | [[Java Lambda]] | syntax, functional interface, method reference (`::`), effectively final, `this`, checked exception | ✅ |
 | [[Java Stream]] | lazy evaluation, `collect`/`Collectors`, `map` vs `flatMap`, primitive stream, parallel stream | ✅ |
 | [[Java Lombok]] | annotation processor ลด boilerplate, `@Data`/`@Builder`/`@Slf4j`, กับดักบน JPA entity | ✅ |
 | [[Java MapStruct]] | map DTO/entity ตอน compile, `@Mapping`/`@MappingTarget`, ใช้คู่กับ Lombok ต้องระวังอะไร | ✅ |
+| [[Java JUnit 5]] | `@Test`/lifecycle, assertion, `@Nested`, `@ParameterizedTest`, instance lifecycle, เทียบ JUnit 4 | ✅ |
+| [[Java REST Assured]] | `given()`/`when()`/`then()` มีอะไรให้ใช้บ้าง, Hamcrest matcher ที่ใช้บ่อย, `extract()` | ✅ |
+| [[Java Virtual Threads]] | JEP 444 (Java 21), carrier thread, pinning, `ScopedValue`, ไม่ช่วย CPU-bound | ✅ |
 
 ---
 
@@ -36,7 +41,7 @@ created: 2026-08-18
 - **Optional** — ใช้ตอนไหน ไม่ใช้ตอนไหน (อย่าใส่เป็น field หรือ parameter)
 - **`equals` / `hashCode`** — สัญญาที่ต้องรักษา และผลตอนเอาไปใส่ `HashMap`/`HashSet`
 - **Generics** — wildcard, type erasure, ทำไมบางอย่างเขียนไม่ได้
-- **Concurrency** — `CompletableFuture`, `ExecutorService`, thread safety
+- **Concurrency** — `CompletableFuture`, `ExecutorService`, thread safety (virtual thread เขียนแยกแล้วที่ [[Java Virtual Threads]])
 - **Text block** (Java 15+) — เขียน SQL/JSON หลายบรรทัดโดยไม่ต้องต่อ string
 
 ---
@@ -52,8 +57,8 @@ created: 2026-08-18
 | `instanceof` pattern (`if (o instanceof Foo f)`) | 16 | ✅ |
 | **sealed** class/interface | 17 | ✅ |
 | pattern matching for `switch` | 21 | ❌ |
-| **record pattern** (แกะ component) | 21 | ❌ |
-| virtual thread | 21 | ❌ |
+| **[[Java Record\|record pattern]]** (แกะ component) | 21 | ❌ |
+| **[[Java Virtual Threads\|virtual thread]]** | 21 | ❌ |
 | sequenced collection | 21 | ❌ |
 
 ---

@@ -132,6 +132,7 @@ private service = inject(MyService);
 
 - [[Angular HttpClient]] — service ส่วนใหญ่ห่อ HttpClient ไว้ข้างใน
 - [[Quarkus Project Structure]] — แนวคิด service layer แบบเดียวกันฝั่ง backend
+- [[Dependency Injection]] — หลักการทั่วไปเบื้องหลัง `inject()`/`providedIn`, เทียบกับ Singleton pattern
 
 ## 📖 อ่านต่อ
 

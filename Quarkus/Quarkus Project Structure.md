@@ -192,6 +192,7 @@ src/main/docker/
 - [[Quarkus Panache]] — active record vs repository pattern (กระทบว่าจะมี `...Repository` layer หรือไม่)
 - [[Quarkus Build]] — ไฟล์ใน `src/main/resources`/`src/main/docker` ถูกใช้ยังไงตอน build จริง
 - [[Quarkus Flyway]] — โครงสร้างไฟล์ใน `db/migration`
+- [[Dependency Injection]] — หลักการทั่วไปเบื้องหลัง `@Inject`/`@ApplicationScoped`, เทียบกับ Singleton pattern
 - [[Quarkus]] — หน้ารวม
 
 ## 📖 อ่านต่อ

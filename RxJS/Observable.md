@@ -289,6 +289,7 @@ firstValueFrom(obs$)   // แปลงเป็น Promise เอาแค่ค
 - [[RxJS]] — หน้ารวม, ใช้ทำอะไรได้บ้างจริง ๆ, operator แบ่งตามหมวด
 - [[shareReplay]] — operator ที่แปลง cold observable ให้กลายเป็น hot + replay ค่าล่าสุด
 - [[Java Stream]] — mental model แบบ lazy pipeline เดียวกัน ฝั่ง Java (ทำงานกับค่าที่มีอยู่แล้ว ไม่ใช่ค่าที่มาตามเวลา)
+- [[Observer Pattern]] — รากฐาน design pattern ที่ Observable ทั้งระบบต่อยอดมา (subscribe/unsubscribe = attach/detach)
 
 ## 📖 อ่านต่อ
 

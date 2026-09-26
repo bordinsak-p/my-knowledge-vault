@@ -21,6 +21,8 @@ created: 2026-09-17
 | [[Angular Updates]] | Angular 22 | 2026-09-17 |
 | [[Quarkus Updates]] | 3.39.2 (LTS: 3.33) | 2026-09-17 |
 | [[Keycloak Updates]] | 26.7.3 | 2026-09-17 |
+| [[Java Updates]] | 27 (LTS: 25) | 2026-09-21 |
+| [[Claude Code Updates]] | v2.1.280 | 2026-09-23 |
 
 ---
 

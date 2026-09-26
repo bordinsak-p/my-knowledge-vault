@@ -11,7 +11,7 @@ created: 2026-08-18
 # 🧪 Quarkus Testing — `@QuarkusTest` และ REST Assured
 
 > **stage "test" ใน CI pipeline ไร้ความหมายถ้าไม่มีเทสให้รันจริง** — pipeline ที่เขียนไว้สวยงามแต่ `mvn test` ไม่เจออะไรให้รัน (หรือแย่กว่านั้นคือเทสถูก comment ทิ้งไว้) จะสีเขียวเสมอไม่ว่าโค้ดจะพังแค่ไหน
-> โน้ตนี้คือพื้นฐานพอจะเขียน/เปิดใช้เทสของ Quarkus ให้กลับมามีความหมายจริง
+> โน้ตนี้คือพื้นฐานพอจะเขียน/เปิดใช้เทสของ Quarkus ให้กลับมามีความหมายจริง — ถ้ายังไม่คุ้นพื้นฐาน JUnit 5 เอง (`@Test`/lifecycle/assertion/`@ParameterizedTest`) ดู [[Java JUnit 5]] ก่อน โน้ตนี้ต่อยอดจากตรงนั้นอีกที
 
 ---
 
@@ -72,9 +72,9 @@ void createProduct_returns201() {
         .body("""
             { "code": "P001", "name": "Widget", "price": 99.90 }
             """)
-    .when()
+		.when()
         .post("/api/products")
-    .then()
+	    .then()
         .statusCode(201)
         .header("Location", containsString("/api/products/"))
         .body("code", equalTo("P001"))
@@ -89,6 +89,8 @@ given()   ← เตรียม request (body, header, param)
 ```
 
 **อ่านออกเสียงได้ตรงตัว: "กำหนดแบบนี้ เมื่อยิงไปแล้ว ต้องได้แบบนี้"** — นี่คือเหตุผลที่ REST Assured เป็นตัวเลือกมาตรฐานสำหรับเทส REST API แทนการเขียน `HttpClient` ดิบ ๆ เอง
+
+**`given()` มีตัวเลือกให้ใช้มากกว่านี้เยอะ** (header/param/pathParam/auth/multiPart ฯลฯ) และ `then()` ตรวจได้ด้วย Hamcrest matcher อีกหลายตัวนอกจาก `equalTo`/`containsString` — ดูรายการเต็มที่ [[Java REST Assured]]
 
 ### ตรวจ JSON path ได้ตรง ๆ ไม่ต้อง deserialize
 
@@ -113,7 +115,9 @@ class ProductServiceTest {
     void duplicateCode_throws() {
         service.create(new CreateRequest("P001", "A", BigDecimal.ONE));
         assertThrows(IllegalArgumentException.class,
-            () -> service.create(new CreateRequest("P001", "B", BigDecimal.ONE)));
+            () -> service.create(
+	            new CreateRequest("P001", "B", BigDecimal.ONE))
+            );
     }
 }
 ```

@@ -23,35 +23,36 @@ created: 2026-09-15
 | [[Observable]] | หลักคิดเบื้องหลัง, push vs pull, cold/hot, next/error/complete contract | ✅ |
 | [[shareReplay]] | operator แปลง cold → hot + replay ค่าล่าสุด | ✅ |
 
+### Operator เดี่ยว ๆ ที่ใช้บ่อย — แยกไฟล์ตามตัว
+
+| โน้ต | ทำอะไร |
+|---|---|
+| [[switchMap]] | ยกเลิกตัวเก่า สลับไปตัวใหม่ — search |
+| [[mergeMap]] | ทำพร้อมกันหมด ไม่สนลำดับ — like/independent action |
+| [[concatMap]] | เข้าคิว ทีละตัวตามลำดับ — save ที่ต้องเรียง |
+| [[exhaustMap]] | เมินตัวใหม่ถ้าตัวเก่ายังไม่เสร็จ — submit/login กันกดซ้ำ |
+| [[debounceTime]] | รอจนหยุดพิมพ์/หยุดกดก่อนค่อยทำงาน |
+| [[throttleTime]] | ทำทันทีตัวแรก แล้วปิดรับชั่วคราว |
+| [[distinctUntilChanged]] | ไม่ยิงซ้ำถ้าค่าเหมือนเดิม |
+| [[filter]] | กรองก่อนทำงานต่อ |
+| [[takeUntil]] | เลิกฟังอัตโนมัติ กัน memory leak |
+| [[tap]] | side effect ไม่แตะค่า (loading spinner, log) |
+| [[catchError]] | จับ error กัน stream ตาย |
+| [[forkJoin]] | รอทุกตัว complete แล้วยิงครั้งเดียว — เรียก API หลายตัวพร้อมกัน |
+| [[combineLatest]] | ยิงใหม่ทุกครั้งที่มีตัวเปลี่ยน — validate ฟอร์มหลายฟิลด์ |
+| [[zip]] | จับคู่ค่าตามลำดับที่มาถึง |
+
 ---
 
 ## 1. ใช้ทำอะไรได้บ้าง — ตามสถานการณ์จริง
 
 ### 1.1 ยิง HTTP แบบ debounce — ไม่ยิงทุกตัวอักษรที่พิมพ์
 
-```ts
-searchInput$.pipe(
-  debounceTime(300),              // รอ 300ms หลังพิมพ์หยุด
-  distinctUntilChanged(),         // ไม่ยิงซ้ำถ้าค่าเหมือนเดิม
-  switchMap(keyword =>
-    this.http.get<Result[]>(`/api/search?q=${keyword}`)),
-).subscribe(results => this.results = results);
-```
-
-ใช้กับช่องค้นหา, autocomplete — request เก่าถูกยกเลิกอัตโนมัติถ้าพิมพ์คำใหม่ก่อน request เก่าตอบ (ดูเหตุผลเต็ม ๆ ที่ [[Observable]] ข้อ 7)
+ใช้กับช่องค้นหา/autocomplete — `debounceTime` รอให้หยุดพิมพ์ก่อน แล้ว `switchMap` ยกเลิก request เก่าอัตโนมัติถ้าพิมพ์คำใหม่ก่อน request เก่าตอบ ดูโค้ดเต็มและเหตุผลที่ [[debounceTime]] และ [[switchMap]] (ดูเหตุผลเรื่อง cancel เต็ม ๆ ที่ [[Observable]] ข้อ 7)
 
 ### 1.2 ยิงหลาย API พร้อมกัน รอครบทุกตัว
 
-```ts
-forkJoin({
-  user: this.http.get<User>('/api/user'),
-  orders: this.http.get<Order[]>('/api/orders'),
-}).subscribe(({ user, orders }) => {
-  console.log(user, orders);   // ได้ทั้งคู่พร้อมกันตอนที่ทั้งสอง request เสร็จแล้ว
-});
-```
-
-เหมือน `Promise.all()` แต่เป็น Observable — เหมาะกับหน้าที่ต้องโหลดข้อมูลหลายก้อนก่อนแสดงผล
+ใช้ [[forkJoin]] — เหมือน `Promise.all()` แต่เป็น Observable เหมาะกับหน้าที่ต้องโหลดข้อมูลหลายก้อนก่อนแสดงผล ดูโค้ดเต็มที่ [[forkJoin]]
 
 ### 1.3 Retry อัตโนมัติเมื่อ request ล้มเหลว (พร้อม exponential backoff)
 
@@ -69,16 +70,7 @@ this.http.get('/api/data').pipe(
 
 ### 1.4 Form validation ที่ต้องดูหลายฟิลด์พร้อมกัน
 
-```ts
-combineLatest([
-  this.form.get('password')!.valueChanges,
-  this.form.get('confirmPassword')!.valueChanges,
-]).pipe(
-  map(([password, confirm]) => password === confirm),
-).subscribe(matches => this.passwordsMatch = matches);
-```
-
-`valueChanges` ของ Angular reactive form เป็น Observable อยู่แล้วในตัว — ไม่ต้องผูก event handler เอง
+ใช้ [[combineLatest]] — `valueChanges` ของ Angular reactive form เป็น Observable อยู่แล้วในตัว รวมหลายฟิลด์แล้ว derive ค่าใหม่ทุกครั้งที่ฟิลด์ใดฟิลด์หนึ่งเปลี่ยน ดูโค้ดเต็มที่ [[combineLatest]]
 
 ### 1.5 Real-time ผ่าน WebSocket
 
@@ -101,13 +93,7 @@ interval(5000).pipe(
 
 ### 1.7 คุมจำนวนงานที่ทำพร้อมกัน
 
-```ts
-from(fileList).pipe(
-  mergeMap(file => uploadFile(file), 3),   // อัปโหลดพร้อมกันได้สูงสุด 3 ไฟล์ ที่เหลือรอคิว
-).subscribe();
-```
-
-พารามิเตอร์ตัวที่สองของ `mergeMap` จำกัด concurrency — กันไม่ให้ยิง request 100 ตัวพร้อมกันจนเซิร์ฟเวอร์ล่ม
+ใช้ [[mergeMap]] พร้อม parameter ตัวที่สองจำกัด concurrency — กันไม่ให้ยิง request/อัปโหลดพร้อมกันหมดจนเซิร์ฟเวอร์ล่ม ดูโค้ดเต็มที่ [[mergeMap]]
 
 ### 1.8 State เบา ๆ ที่หลาย component ใช้ร่วมกัน
 
@@ -141,11 +127,7 @@ export class CartStore {
 
 ### `forkJoin` vs `combineLatest` vs `zip` — สามตัวที่สับสนกันบ่อยที่สุด
 
-| operator | ยิงค่าออกมาตอนไหน | เหมาะกับ |
-|---|---|---|
-| **`forkJoin`** | รอทุกตัว **complete** แล้วยิงครั้งเดียว (ค่าสุดท้ายของแต่ละตัว) | `Promise.all()` เวอร์ชัน Observable — เรียก API หลายตัวพร้อมกัน รอครบทุกตัว |
-| **`combineLatest`** | ยิงทุกครั้งที่ตัวใดตัวหนึ่งปล่อยค่าใหม่ (หลังทุกตัวปล่อยค่าแรกแล้ว) | ค่าที่ derive จากหลาย stream ที่ยังเปลี่ยนต่อเนื่อง เช่น validate ฟอร์มจากหลายฟิลด์ |
-| **`zip`** | จับคู่ตามลำดับ (ค่าที่ 1 คู่กับค่าที่ 1, ค่าที่ 2 คู่กับค่าที่ 2 ...) | ต้องเรียงคู่ค่าจากหลาย source ตามลำดับที่มาให้ตรงกัน |
+แต่ละตัวแยกเป็นโน้ตของตัวเองพร้อมตารางเทียบและตัวอย่างเต็ม: [[forkJoin]] (รอ complete ครบทุกตัว), [[combineLatest]] (ยิงใหม่ทุกครั้งที่มีตัวเปลี่ยน), [[zip]] (จับคู่ตามลำดับ)
 
 ---
 
@@ -177,30 +159,21 @@ RxJS เป็น library แยก ใช้ได้ใน **vanilla JavaScrip
 ## Cheat sheet
 
 ```ts
-// HTTP แบบ debounce
-input$.pipe(debounceTime(300), distinctUntilChanged(), switchMap(fn))
-
-// หลาย API พร้อมกัน รอครบ
-forkJoin({ a: obsA$, b: obsB$ })
-
-// derive จากหลาย stream ที่เปลี่ยนตลอด
-combineLatest([obsA$, obsB$])
-
 // retry พร้อม backoff
 obs$.pipe(retry({ count: 3, delay: (e, i) => timer(1000 * 2 ** i) }))
-
-// จำกัด concurrency
-from(items).pipe(mergeMap(fn, 3))
 
 // state เบา ๆ
 new BehaviorSubject(initialValue)
 ```
+
+operator เดี่ยว ๆ (debounce, switchMap, forkJoin, combineLatest, zip, mergeMap concurrency ฯลฯ) มี cheat sheet ของตัวเองในแต่ละโน้ต — ดูตารางด้านบน
 
 ---
 
 ## 🔗 เกี่ยวข้อง
 
 - [[Observable]] — หลักคิดเบื้องหลังทั้งหมดในโน้ตนี้
+- [[switchMap]], [[mergeMap]], [[concatMap]], [[exhaustMap]], [[debounceTime]], [[throttleTime]], [[distinctUntilChanged]], [[filter]], [[takeUntil]], [[tap]], [[catchError]], [[forkJoin]], [[combineLatest]], [[zip]] — operator เดี่ยว ๆ แยกไฟล์ตามตัว ต่างจากโน้ตนี้ที่จัดตามสถานการณ์
 - [[shareReplay]] — ใช้ตอนอยากแชร์ผลลัพธ์ HTTP call เดียวกันให้หลาย subscriber
 - [[Quarkus WebSocket]] — ฝั่ง server ของ use case ข้อ 1.5
 - [[Java Stream]] — mental model แบบ lazy pipeline ที่คล้ายกันฝั่ง Java

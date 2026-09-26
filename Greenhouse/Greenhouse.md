@@ -40,6 +40,7 @@ created: 2026-08-17
 |---|---|---|---|
 | [[URL Shortener (Quarkus)]] | `sprouting` | backend | 2026-09-12 |
 | [[CI-CD — Jenkins vs GitHub Actions]] | `seed` | devops | 2026-08-18 |
+| [[Background Job Processor (Quarkus)]] | `seed` | backend | 2026-09-21 |
 
 ## Composted — และบทเรียนที่ได้
 

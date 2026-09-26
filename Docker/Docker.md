@@ -32,6 +32,13 @@ created: 2026-08-18
 ## 📋 Reference
 
 - [[Docker Command]] — cheat sheet รวมคำสั่ง `docker` ทั้งหมดแยกตามหมวด (lifecycle, debug, image, volume, network, cleanup) เปิดดูเร็ว ๆ ตอนจำคำสั่งไม่ได้ ไม่ใช่เนื้อหาที่ต้องอ่านตามลำดับเหมือน 3 ภาคด้านบน
+- [[Docker Network and Volume]] — เจาะลึกแนวคิดเบื้องหลัง network driver (bridge/host/overlay/macvlan) และวิธีเก็บข้อมูล 3 แบบ (volume/bind mount/tmpfs) ต่างจาก [[Docker Command]] ที่มีแค่คำสั่งเฉยๆ
+
+---
+
+## 🤖 Agent Skill / MCP
+
+- **Docker MCP Toolkit** — ฟีเจอร์ในตัว Docker Desktop สำหรับรัน MCP server อื่นๆ (200+ ตัวจาก Docker MCP Catalog) แบบ containerized อย่างปลอดภัย มี plugin ต่อ Claude Code ได้โดยตรง — ไม่ใช่ skill สำหรับ "เขียนโค้ด Docker ให้ถูก" แบบที่ [[Supabase]] ทำ แต่เป็นเครื่องมือรัน MCP server ตัวอื่นผ่าน Docker แทน ดูที่ [Docker MCP Toolkit docs](https://docs.docker.com/ai/mcp-catalog-and-toolkit/toolkit/)
 
 ---
 

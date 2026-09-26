@@ -160,7 +160,7 @@ key ผูกกับนาทีปัจจุบัน พอขึ้นน
 
 ### 5.4 Idempotency key
 
-กันการทำงานซ้ำจากการกดปุ่มรัวหรือ client retry
+กันการทำงานซ้ำจากการกดปุ่มรัวหรือ client retry (หลักการทั่วไปเบื้องหลังเทคนิคนี้ + ทำไมจำเป็นในระบบ distributed ดู [[Idempotency]])
 
 ```java
 if (!ds.value(String.class).setnx("idem:" + requestKey, "1")) {

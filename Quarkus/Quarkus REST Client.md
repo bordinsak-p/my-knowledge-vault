@@ -139,7 +139,7 @@ Product byId(String id);
 **retry ได้เฉพาะงานที่ทำซ้ำแล้วผลเหมือนเดิม** — `GET`, `PUT`, `DELETE` โดยทั่วไปปลอดภัย
 **`POST` ที่สร้างของ / ตัดเงิน / ส่งเอกสาร ห้าม retry ลอย ๆ** เพราะ timeout ไม่ได้แปลว่าปลายทางไม่ได้ทำ — อาจทำไปแล้วแต่ตอบกลับไม่ทัน retry แล้วได้ของซ้ำ
 
-ถ้าจำเป็นต้อง retry งานเขียนจริง ๆ ต้องมี **idempotency key** กำกับ
+ถ้าจำเป็นต้อง retry งานเขียนจริง ๆ ต้องมี **idempotency key** กำกับ (หลักการทั่วไป + วิธี implement ดู [[Idempotency]])
 
 `jitter` สำคัญกว่าที่คิด — ถ้าทุก instance retry พร้อมกันเป๊ะ ๆ จะกระทืบปลายทางเป็นระลอก (thundering herd)
 
@@ -261,6 +261,7 @@ quarkus.rest-client.logging.masked-headers=Authorization,Cookie
 - [[Quarkus]] — หน้ารวม
 - [[Quarkus Build]] — เรื่องการเปลี่ยนชื่อ extension ที่ 3.9
 - [[Quarkus Redis]] — idempotency key สำหรับกันงานเขียนซ้ำตอน retry
+- [[Quarkus Exception Mapper]] — `ExceptionMapper` ฝั่ง server (endpoint เราเองโยน exception) ต่างจาก `@ClientExceptionMapper` ในโน้ตนี้ที่เป็นฝั่งเรียกออก
 
 ## 📖 อ่านต่อ
 

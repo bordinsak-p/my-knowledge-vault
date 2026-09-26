@@ -85,7 +85,7 @@ POST /products {name: "A"}   ครั้งที่ 1 → สร้างส�
 POST /products {name: "A"}   ครั้งที่ 2 → สร้างสินค้า id=2   ⚠️ ได้ของเพิ่มอีกชิ้น
 ```
 
-**นี่คือเหตุผลที่ retry logic ต้องรู้ว่า method ไหน idempotent** — retry `PUT`/`DELETE` อัตโนมัติได้อย่างปลอดภัย แต่ retry `POST` เฉย ๆ เสี่ยงสร้างของซ้ำ (ดูเรื่อง idempotency key ที่ [[Quarkus REST Client]])
+**นี่คือเหตุผลที่ retry logic ต้องรู้ว่า method ไหน idempotent** — retry `PUT`/`DELETE` อัตโนมัติได้อย่างปลอดภัย แต่ retry `POST` เฉย ๆ เสี่ยงสร้างของซ้ำ (ดูเรื่อง idempotency key ที่ [[Quarkus REST Client]]) — หลักการทั่วไปเรื่อง idempotency ที่ไม่ผูกกับ HTTP โดยเฉพาะ (ทำไม exactly-once เป็นไปไม่ได้จริง, idempotency key pattern) ดู [[Idempotency]]
 
 **PATCH ทำไมกำกวม:** สเปกไม่บังคับว่าต้อง idempotent — `PATCH {op: "increment", field: "qty"}` ยิงสองครั้งได้ผลไม่เท่ากัน แต่ `PATCH {status: "PAID"}` ยิงกี่ครั้งก็ได้ผลเดิม **ขึ้นกับว่าคนออกแบบ API เขียนยังไง**
 
@@ -449,6 +449,7 @@ public class OrderResource {
 
 - [[Quarkus]] — หน้ารวม
 - [[Quarkus REST Client]] — idempotency key, retry, timeout ฝั่งที่เป็น client
+- [[Idempotency]] — หลักการทั่วไปเบื้องหลัง idempotent, ไม่ผูกกับ HTTP
 - [[Quarkus Health Check]] — endpoint พิเศษที่ก็อยู่บนโปรโตคอลเดียวกันนี้
 - [[Java Record]] — ข้อจำกัดของ record เวลาต้องแยก "ไม่ส่งมา" กับ "ส่งเป็น null"
 

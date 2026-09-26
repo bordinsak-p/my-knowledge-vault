@@ -27,8 +27,13 @@ created: 2026-08-18
 | [[Quarkus Hibernate]]       | Hibernate 5→6, type mapping, transaction/persistence context, N+1, bulk insert, multitenancy, native                            | ✅          |
 | [[Quarkus Flyway]]          | schema history, ชื่อไฟล์ V/R, baseline, callback, multi-datasource, zero-downtime (expand/contract)                             | ✅          |
 | [[Quarkus EntityManager]]   | สไตล์การเขียนแบบไม่ผ่าน Panache — lifecycle, persist/merge, query 4 แบบ, native query + การดัก null, pagination trap            | ✅          |
+| [[Quarkus Transaction]]     | `@Transactional` 6 TxType, rollback rule, `QuarkusTransaction` แบบ programmatic (`begin`/`requiringNew`/`.call()`)              | ✅          |
+| [[Quarkus Exception Mapper]] | custom `ExceptionMapper` ฝั่ง server, exception hierarchy matching, catch-all mapper, validation exception                    | ✅          |
+| [[Quarkus Validation]]      | Bean Validation annotation, `@Valid`, custom validator (field-level DB-backed + class-level cross-field)                       | ✅          |
+| [[Quarkus Response]]        | `Response` vs `RestResponse<T>`, static factory method, `created()`, ทำไม `RestResponse` ดีกว่าเรื่อง OpenAPI/native            | ✅          |
 | [[Quarkus Panache]]         | Active record vs repository, query syntax, ข้อจำกัด, ทิศทาง Jakarta Data                                                        | ✅          |
 | [[Quarkus Build]]           | **ขั้นตอนการ build แบบเต็ม** (source→container→deploy), JVM vs native, fast-jar, build-time config                              | ✅          |
+| [[Quarkus CLI]]             | `quarkus create app`, จัดการ extension, `dev`/`build`/`image` ผ่านคำสั่งเดียวไม่ว่า Maven/Gradle, plugin                        | ✅          |
 | [[Quarkus Redis]]           | `quarkus-cache` vs `quarkus-redis-client`, data structure, cache-aside, distributed lock, rate limit, idempotency, Dev Services | ✅          |
 | [[Quarkus REST Client]]     | `@RegisterRestClient`, configKey, header, exception mapper, timeout/retry/circuit breaker, multipart, token propagation         | ✅          |
 | [[Quarkus HTTP Methods]]    | GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS ครบ, safe/idempotent/cacheable, annotation ใน Quarkus, status code คู่กัน                | ✅          |
@@ -58,6 +63,12 @@ created: 2026-08-18
 2. **เวอร์ชันเปลี่ยนชื่อของบ่อย** — เช่น `quarkus-resteasy-reactive` → `quarkus-rest` ตอน 3.9 ตัวอย่างบนเว็บมักใหม่กว่าที่เราใช้ ก๊อปมาตรง ๆ แล้ว build ไม่ผ่าน
 3. **ของที่ทำงานใน request context จะไม่ทำงานใน background thread** — `@RequestScoped` bean, security context, สิ่งที่ resolve ตาม request
 4. **property ที่ไม่มี prefix มีผลทุก profile รวม prod** — ของที่ตั้งใจให้เปิดเฉพาะ dev ต้องใส่ `%dev.` เสมอ
+
+---
+
+## 🤖 Agent Skill / MCP
+
+- **Quarkus Agent MCP** (`quarkusio/quarkus-agent-mcp`) — MCP server ทางการจาก Quarkus เอง รันเป็น process แยกที่รอดแม้แอปจะ crash ให้ AI agent สร้างโปรเจกต์จาก natural language ("สร้าง Quarkus REST API ต่อ PostgreSQL"), คุม lifecycle (start/stop/restart), ค้นเอกสาร Quarkus, และมี tool `quarkus_skills` โหลด coding pattern ของ extension นั้นๆ ก่อนเริ่มเขียนโค้ดให้อัตโนมัติ — ลงผ่าน `claude plugin marketplace add quarkusio/quarkus-agent-mcp` แล้ว `claude plugin install quarkus-agent@quarkus-tools`
 
 ---
 

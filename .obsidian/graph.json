@@ -134,6 +134,20 @@
       }
     },
     {
+      "query": "path:\"Design Patterns\"",
+      "color": {
+        "a": 1,
+        "rgb": 6514417
+      }
+    },
+    {
+      "query": "path:\"Payment\"",
+      "color": {
+        "a": 1,
+        "rgb": 15485081
+      }
+    },
+    {
       "query": "path:\"Greenhouse\"",
       "color": {
         "a": 1,
@@ -151,6 +165,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 1.2414543899483075,
+  "scale": 0.6316046762907584,
   "close": true
 }

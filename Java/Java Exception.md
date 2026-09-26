@@ -79,7 +79,7 @@ static int normal() {
 try
 finally
 ```
-(คืนค่า `1` — `finally` รันก่อนค่าจะถูกส่งออกไปจริง ๆ เสมอ ไม่ว่า `try` จะจบด้วย `return`, exception, หรือปกติ)
+(คืนค่า `1` — `finally` รันก่อนค่าจะถูกส่งออกไปจริง ๆ เสมอ ไม่ว่า `try` จะจบด้วย `return`, exception, หรือปกติ — แต่ **"เสมอ" ไม่ได้แปลว่าทุกกรณี** `System.exit()`/JVM crash ข้าม `finally` ได้ และการแก้ตัวแปรที่ return ไปแล้วมีผลหรือไม่ ดู [[Java Try Catch]] ข้อ 3)
 
 ### ⚠️ `finally` ที่มี `return`/`throw` กลืน exception เงียบ ๆ
 
@@ -126,6 +126,8 @@ close A
 **ปิดเรียงย้อนกลับจากลำดับที่เปิด** (เปิด A→B, ปิด B→A) — เหมือน stack **ปิดให้อัตโนมัติแม้เกิด exception ระหว่างทาง** ไม่ต้องเขียน `finally { a.close(); b.close(); }` เองอีกต่อไป (แบบที่ทำกันก่อน Java 7)
 
 **ใช้ได้กับทุกอย่างที่ implement `AutoCloseable`** — `Connection`, `Statement`, `InputStream`, `Scanner` ของมาตรฐานทำ interface นี้ไว้แล้ว หรือ class ที่เขียนเองก็ implement เพิ่มได้ตามตัวอย่างข้างบน
+
+เหตุผลจริงที่มันดีกว่า try-finally ไม่ใช่แค่ประหยัดโค้ด — คือเรื่อง **suppressed exception** (exception จาก `close()` ไม่ทับ exception จริงของ body) รวมถึง `try (existingVariable)` ของ Java 9 ดู [[Java Try Catch]] ข้อ 4
 
 ---
 
@@ -252,6 +254,7 @@ throw new X(e.getMessage());       // ❌ เสีย stack trace เดิม
 ## 🔗 เกี่ยวข้อง
 
 - [[Java]] — หน้ารวม
+- [[Java Try Catch]] — กลไกลึกของ try/catch/finally: ลำดับ `catch`, `finally` ไม่รันเมื่อไหร่, suppressed exception, rethrow, `InterruptedException`
 - [[Java Lambda]] — ทำไม checked exception ใช้ใน lambda ตรง ๆ ไม่ได้ และวิธีแก้
 - [[Java Stream]] — ปัญหาเดียวกันเกิดกับ `map()`/`filter()` ใน stream pipeline
 

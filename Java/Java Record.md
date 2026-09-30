@@ -72,7 +72,8 @@ public record Money(BigDecimal amount, String currency) implements Comparable<Mo
 
     public Money plus(Money other) {
         requireSameCurrency(other);
-        return new Money(amount.add(other.amount), currency);   // คืนตัวใหม่ ไม่แก้ตัวเดิม
+        return new Money(amount.add(other.amount), currency);   
+        // คืนตัวใหม่ ไม่แก้ตัวเดิม
     }
 
     public boolean isZero() {

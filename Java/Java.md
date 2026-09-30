@@ -20,6 +20,7 @@ created: 2026-08-18
 
 | โน้ต | ว่าด้วย | สถานะ |
 |---|---|---|
+| [[Java OOP]] | 4 เสาหลัก (encapsulation/abstraction/inheritance/polymorphism) พร้อมตัวอย่าง notification channel ที่คอมไพล์รันจริง | ✅ |
 | [[Java Data Type]] | primitive 8 ตัว vs reference, wrapper class, autoboxing, widening/narrowing, Integer cache | ✅ |
 | [[Java Value vs Reference]] | pass-by-value (ทำไม swap ไม่ได้), aliasing, `==` กับ String pool, unboxing NPE, stack vs heap, ต้นทุน boxing, Valhalla | ✅ |
 | [[Java Exception]] | checked vs unchecked, try-with-resources, multi-catch, ออกแบบ exception เอง, exception chaining | ✅ |

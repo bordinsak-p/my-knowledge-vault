@@ -142,6 +142,7 @@ class Context {
 
 - [[Dependency Injection]] — วิธีที่ strategy ถูก inject เข้า context จากภายนอก
 - [[Singleton Pattern]] — strategy ที่ stateless มักถูกทำเป็น singleton ได้อย่างปลอดภัย
+- [[Java OOP]] — ทำไม inheritance ไม่ใช่คำตอบเสมอไป (Effective Java Item 18) ซึ่งเป็นเหตุผลที่ Strategy pattern มีไว้แก้
 
 ## 📖 อ่านต่อ
 

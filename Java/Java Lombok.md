@@ -109,6 +109,7 @@ public class ProductDto {
 
 - [[Java MapStruct]] — ใช้คู่กันบ่อยมาก (Lombok ทำ DTO/entity, MapStruct map ระหว่างกัน) มี gotcha เรื่องลำดับ annotation processor ที่ต้องรู้ก่อนใช้คู่กัน
 - [[Java Record]] — ทางเลือกของ JDK เองสำหรับ immutable data class โดยไม่ต้องพึ่ง Lombok เลย (คล้าย `@Value` แต่เป็นของภาษาเอง)
+- [[Java OOP]] — encapsulation คืออะไร ทำไม `@Data` แปะมั่วๆ ถึงทำลายมันได้
 
 ## 📖 อ่านต่อ
 

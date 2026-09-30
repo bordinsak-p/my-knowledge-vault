@@ -114,6 +114,8 @@ sequenceDiagram
 
 **`@Priority` เลขน้อยกว่า = ทำงานก่อน = ชั้นนอกสุด** (ห่อ interceptor เลขมากกว่าไว้ข้างใน)
 
+> ⚠️ **ระวังสับสนกับ `@All` (inject list ของ bean ทั้งหมดที่ implement interface เดียวกัน)** — `@All` เรียงลำดับ**เลขมากไปน้อย** (priority สูงสุดอยู่หัว list) ทิศทาง**ตรงข้าม**กับ interceptor ตรงนี้เป๊ะ ดูตัวอย่าง `@All` จริงที่ [[Java OOP]] ข้อ 5
+
 | ค่าคงที่ | เลข | ใครควรใช้ช่วงนี้ |
 |---|---|---|
 | `PLATFORM_BEFORE` | 0 | container/platform เอง |
@@ -208,6 +210,7 @@ public class MyInterceptor {
 
 ## 🔗 เกี่ยวข้อง
 
+- [[Java OOP]] — `@All` (inject list ของทุก bean ที่ implement interface เดียวกัน) ที่เรียงลำดับตรงข้ามกับ interceptor priority
 - [[Quarkus Transaction]] — `@Transactional` ตัวอย่าง interceptor จริงที่ใช้บ่อยที่สุดใน Quarkus
 - [[Quarkus Redis]] — `@CacheResult`/`@CacheInvalidate` อีกตัวอย่างของ interceptor จริง (ข้อ 2)
 - [[Java Try Catch]] — `try/finally` pattern ที่ใช้ใน `@AroundInvoke` บ่อยมาก

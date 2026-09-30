@@ -153,6 +153,7 @@ public ObjectMapper objectMapper() { ... }   // สร้าง bean จาก c
 
 ## 🔗 เกี่ยวข้อง
 
+- [[Java OOP]] — interface/polymorphism พื้นฐานที่ CDI ใช้เลือก concrete bean ตอน inject, ตัวอย่าง `@All` inject bean หลายตัวพร้อมกันจริง (ข้อ 5)
 - [[Dependency Injection]] — หลักการ DI ทั่วไปไม่ผูก framework, CDI เป็น implementation หนึ่ง
 - [[Quarkus Interceptor]] — bean ต้องถูก CDI จัดการก่อน interceptor ถึงจะทำงาน (proxy, self-invocation)
 - [[Quarkus Project Structure]] — ตัวอย่าง `@ApplicationScoped` จริงในโครงสร้างมาตรฐาน resource→service→repository

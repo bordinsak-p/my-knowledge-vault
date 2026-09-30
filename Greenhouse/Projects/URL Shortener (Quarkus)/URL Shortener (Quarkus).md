@@ -8,7 +8,7 @@ type: project
 status: sprouting
 area: backend
 created: 2026-08-17
-updated: 2026-09-12
+updated: 2026-09-29
 ---
 
 # 🔗 URL Shortener (Java / Quarkus)
@@ -112,8 +112,9 @@ DELETE /api/links/{code}   (ไม่มี auth เช่นกัน — ใ�
 
 **DB — เลือก SQLite** (ตัดสินใจ 2026-09-12) เหมาะกับสเกลของโปรเจกต์นี้ (ทำเล่น, single instance) ไฟล์เดียวจบ ไม่ต้องตั้ง DB server แยก
 
-**Cache** — เริ่มด้วย `quarkus-cache` (Caffeine) ในเครื่องก่อน เพราะ traffic ของ shortener เป็น Zipf distribution แรงมาก (link ไม่กี่อันกินคลิกเกือบทั้งหมด) local cache เล็ก ๆ ก็ hit rate สูงแล้ว
-ค่อยขยับไป Redis เมื่อมีหลาย instance แล้วต้องการให้การลบ link มีผลทันทีทุกเครื่อง (สำหรับ SQLite ยิ่งจำเป็น เพราะ SQLite ไม่เหมาะกับหลาย instance เขียนพร้อมกันอยู่แล้ว)
+**Cache — ใช้ Redis ตั้งแต่แรก** (ตัดสินใจ 2026-09-29 เปลี่ยนจากแผนเดิม) **เหตุผลคืออยากฝึกใช้ Redis เป็นทักษะเพิ่ม ไม่ใช่เพราะจำเป็นด้าน scale** — โปรเจกต์นี้ยัง single instance เหมือนเดิม ถ้ามองแค่ requirement จริงของ scale นี้ local cache (Caffeine) ก็พอเกินพอ (traffic ของ shortener เป็น Zipf distribution แรงมาก ลิงก์ไม่กี่อันกินคลิกเกือบทั้งหมด local cache เล็ก ๆ ก็ hit rate สูงอยู่แล้ว) — เลือก Redis ทั้งที่ยังไม่จำเป็นเพราะเป้าหมายจริงของโปรเจกต์นี้คือ "ลองทำเพื่อเรียนรู้" (ข้อ 4 ด้านบน) ไม่ใช่ทำให้ minimal ที่สุด
+
+**ใช้ `quarkus-redis-client`** (ตัดสินใจ 2026-09-29) ไม่ใช้ `quarkus-redis-cache` — เพราะ `redis-cache` ครอบ Redis ไว้หลัง `@CacheResult`/`@CacheInvalidate` เปลี่ยนแค่ backend จาก config ไม่ต้องแตะ Redis command เองเลยสักบรรทัด ซึ่งขัดกับเป้าหมายที่อยากฝึก Redis ตรง ๆ (ดูเหตุผลด้านบน) `redis-client` ให้ `RedisDataSource` มาเรียก `GET`/`SETEX`/`DEL` เองตรงๆ ต้องเขียน cache-hit/miss + TTL + invalidate-on-delete เอง — ได้เห็น Redis ทำงานจริงมากกว่า
 
 ### ⚠️ กับดักเรื่อง dependency
 
@@ -124,7 +125,7 @@ DELETE /api/links/{code}   (ไม่มี auth เช่นกัน — ใ�
 **SQLite ไม่ใช่ DB ที่ Quarkus รองรับเป็นทางการ** — ไม่มี `quarkus-jdbc-sqlite` จาก Red Hat ต้องพึ่ง extension ชุมชน (Quarkiverse) หรือประกอบเองด้วย `org.xerial:sqlite-jdbc` + `hibernate-community-dialects` (SQLiteDialect)
 **จุดเสี่ยงที่สุดของโปรเจกต์นี้:** `sqlite-jdbc` ห่อ native library (JNI) ไว้ข้างใน ตอน build native image ด้วย GraalVM มีประวัติต้องเพิ่ม reflection/resource config เอง ไม่ใช่ plug-and-play เหมือน H2/Postgres — **ควรลองต่อ SQLite + native build ให้ได้ตั้งแต่การทดลองเล็กที่สุด** ก่อนเขียน business logic ต่อ เพราะถ้าตรงนี้ไม่ผ่าน สมมติฐานหลักของโปรเจกต์ (native image) ก็ไปต่อไม่ได้เลย
 
-extension ที่ต้องใช้: REST + Jackson, `hibernate-orm-panache`, SQLite JDBC driver (ชุมชน) + `hibernate-community-dialects`, `cache`
+extension ที่ต้องใช้: REST + Jackson, `hibernate-orm-panache`, SQLite JDBC driver (ชุมชน) + `hibernate-community-dialects`, `quarkus-redis-client`
 
 ---
 
@@ -155,12 +156,13 @@ Panache entity 1 ตัว + endpoint 2 ตัว + SQLite + native build ให
 - SQLite เขียนพร้อมกันจากหลาย connection ได้จำกัด (single-writer) — ไม่กระทบ redirect (read-only) แต่กระทบ throughput ตอนสร้าง/ลบ link จำนวนมากพร้อมกัน
 - SecureRandom บน native image เคยมีปัญหาใน GraalVM รุ่นเก่า ต้องเช็คกับ toolchain ที่ใช้อยู่
 - ถ้าทำเพื่อเรียนรู้ ระวังหลงไปทำ analytics dashboard จนลืมว่าแก่นคือ redirect
+- **เลือก Redis ทับ decision เรื่อง SQLite ที่ตั้งใจเลือกเพราะ "ไฟล์เดียวจบ ไม่ต้องตั้ง DB server แยก"** (ดูหัวข้อ DB ด้านบน) ตอนนี้ต้องมี Redis server รันอยู่ด้วยอีกตัว (local ผ่าน Docker หรือ service แยก) กลับมาเพิ่ม operational overhead ที่เคยตั้งใจเลี่ยงไว้ — ยอมรับได้เพราะเป้าหมายคือฝึกทักษะ ไม่ใช่ minimal setup แล้ว แต่ต้องจำไว้ว่านี่คือ trade-off ที่เลือกเอง ไม่ใช่ผลพลอยได้
 
 ## 📚 ต้องไปเรียนรู้เพิ่ม
 
 - `sqlite-jdbc` + GraalVM native image — ต้อง config reflection/resource อะไรเพิ่มบ้าง
 - `hibernate-community-dialects` — ใช้ SQLiteDialect กับ Panache ยังไง
-- `quarkus-cache` + Caffeine tuning
+- Redis พื้นฐาน (data structure, TTL, persistence mode) + `quarkus-redis-client` (`RedisDataSource`) ใช้ยังไงกับ Quarkus — ดู [[Quarkus Redis]]
 - pattern การ handle unique constraint violation แล้ว retry ใน Panache — ต่อยอดจาก [[Quarkus hibernate]]
 - native image + SecureRandom
 
@@ -190,6 +192,14 @@ Panache entity 1 ตัว + endpoint 2 ตัว + SQLite + native build ให
 - เปลี่ยนชื่อตาราง: `link` → `short_urls`, `reserved_code` → `forbidden_words`
 - เพิ่ม research เรื่องที่มา (TinyURL 2002, Bitly/Twitter 2008-2009) และหลักการพื้นฐาน (indirection + HTTP redirect ไม่ใช่การบีบอัด) พร้อมเพิ่มเทคนิคที่ 4 (hash-based) ในตารางเปรียบเทียบ
 - สถานะขยับจาก `seed` → `sprouting`
+
+### 2026-09-27
+- ผู้ใช้ไม่เข้าใจ `GET /{code}+` (preview page) → อธิบายใหม่ใน [[API Flow Spec]]: ไว้ดูปลายทางก่อนกดจริง, ไม่นับ click, ปุ่ม "ไปต่อ" ชี้กลับ `GET /{code}` ปกติ, ต้อง HTML-escape กัน XSS — ตัดสินใจให้เป็น optional ทำเป็นอันสุดท้าย
+
+### 2026-09-29
+- **เปลี่ยนแผน cache: ใช้ Redis ตั้งแต่แรกแทน Caffeine** เหตุผลคืออยากฝึกใช้ Redis เป็นทักษะเพิ่ม ไม่ใช่เพราะจำเป็นด้าน scale (โปรเจกต์นี้ยัง single instance) — รับรู้ trade-off แล้วว่ากลับมาต้องมี Redis server แยก ขัดกับเหตุผลเดิมที่เลือก SQLite (ดูหัวข้อ Cache และ ⚠️ ความเสี่ยง)
+- เรื่อง click-event queue ("message broker หรือ Redis") ยังไม่ปิด ยังเป็นคำถามค้างเหมือนเดิม ไม่ได้ตัดสินใจไปพร้อมกันรอบนี้
+- **ตัดสินใจใช้ `quarkus-redis-client` ไม่ใช่ `quarkus-redis-cache`** เพราะ `redis-cache` จะซ่อน Redis ไว้หลัง `@CacheResult` หมด ไม่ตรงกับเป้าหมายที่อยากฝึก Redis ตรงๆ — extension ที่ต้องเพิ่มคือ `quarkus-redis-client`
 
 ## 🪦 ถ้าเลิกทำ
 

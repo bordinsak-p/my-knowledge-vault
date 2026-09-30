@@ -7,7 +7,7 @@ type: spec
 status: ready
 parent: "[[URL Shortener (Quarkus)]]"
 created: 2026-09-11
-updated: 2026-09-13
+updated: 2026-09-27
 ---
 
 # 🛠️ API Flow Spec — URL Shortener
@@ -230,9 +230,50 @@ sequenceDiagram
 
 ### `GET /{code}+` — preview page (ไม่ auth)
 
-flow เหมือน redirect ทุกขั้น (reserved word → cache → DB → 404/410 พร้อมแยก `reason: deleted/expired`) แต่ต่างตรงที่:
-- ตอบ `200` + HTML page แสดง `original_url` ให้ผู้ใช้เห็นก่อนกด แทนการ redirect ทันที
-- ไม่นับเป็น click จริง (หรือถ้าจะนับ ให้แยก event type เป็น `preview` ไม่ปนกับ `click`)
+**ทำไมต้องมี:** short link ซ่อนปลายทางไว้ — เห็นแค่ `.../aB3xK9z` ไม่รู้เลยว่ากดแล้วไปไหน (ช่องทางฟิชชิ่งคลาสสิก) preview page คือทางให้ "ดูปลายทางก่อน โดยยังไม่ไปจริง" วิธีเรียกคือเติม `+` ต่อท้าย code (หลายเจ้าใช้ convention คล้ายกันนี้) และ `+` ไม่อยู่ใน alphabet base62 จึงไม่มีทางชนกับ code จริง
+
+| | `GET /aB3xK9z` | `GET /aB3xK9z+` |
+|---|---|---|
+| ตอบ | `302` + `Location` | `200` + HTML page |
+| browser | เด้งไปปลายทางทันที | อยู่ที่หน้าเรา แสดงปลายทางให้ดูก่อน |
+| นับ click | นับ | **ไม่นับ** |
+
+**หน้าที่ตอบกลับ (ตัวอย่างเนื้อหา):**
+```
+ลิงก์นี้จะพาคุณไปที่:
+https://www.amazon.com/gp/product/B08N5WRWNW/...
+[ ไปต่อ ]    ← เป็นแค่ <a href="{base_url}/aB3xK9z"> ชี้กลับมา flow redirect ปกติ
+```
+
+**🧪 ตัวอย่างต่อเนื่อง** (ใช้แถวเดิม `aB3xK9z` → `https://www.amazon.com/gp/product/B08N5WRWNW/...` ที่สร้างไว้ใน `POST /api/links`)
+
+```mermaid
+sequenceDiagram
+    participant U as ผู้ใช้
+    participant S as Server
+
+    U->>S: GET /aB3xK9z+
+    S-->>U: 200 หน้า HTML "จะไปที่ amazon.com/... [ไปต่อ]" (click = 0)
+    Note over U: ดูแล้วไว้ใจได้ → กดปุ่ม
+    U->>S: GET /aB3xK9z
+    S-->>U: 302 Location: https://www.amazon.com/... (click = 1)
+```
+
+| ขั้น | request | response | click ของ `aB3xK9z` |
+|---|---|---|---|
+| 1. เปิด preview | `GET /aB3xK9z+` | `200` HTML | 0 |
+| 2. กด "ไปต่อ" | `GET /aB3xK9z` | `302` → amazon | 1 |
+| 3. preview อีก 99 ครั้ง แต่ไม่กดต่อ | `GET /aB3xK9z+` ×99 | `200` ×99 | 1 (ไม่เพิ่ม) |
+| 4. code ที่ไม่มีอยู่จริง | `GET /zzzzzzz+` | `404` | — |
+| 5. link ที่ถูกลบแล้ว | `GET /aB3xK9z+` | `410` `{ "reason": "deleted" }` | — |
+
+**ข้อกำหนด:**
+- ปุ่ม "ไปต่อ" ชี้ไป `GET /{code}` (ไม่มี `+`) — ไม่ต้องเขียน logic redirect/นับ click ซ้ำ ใช้ flow เดิมทั้งหมด
+- ไม่นับเป็น click เพราะแค่ "ดู" ยังไม่ได้ "ไป" (นับรวมจะทำให้สถิติ click เกินจริง) — ถ้าอยากเก็บสถิติการเปิด preview ให้แยก event type เป็น `preview` ไม่ปนกับ `click`
+- **ต้อง HTML-escape `original_url` ก่อนแสดง** เสมอ (ค่ามาจากผู้ใช้ ถ้าไม่ escape = XSS)
+- error case เหมือน redirect ทุกอย่าง: ไม่เจอ → `404`, ถูกลบ/หมดอายุ → `410` พร้อม `reason`
+
+**ลำดับความสำคัญ:** endpoint นี้เป็น optional — ไม่อยู่ใน "การทดลองที่เล็กที่สุด" ของโน้ตหลัก ทำเป็นอันสุดท้าย
 
 ### `DELETE /api/links/{code}` — ลบ (ไม่มี auth — ใครรู้ code ลบได้)
 

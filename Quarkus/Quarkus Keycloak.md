@@ -336,7 +336,7 @@ export class AuthService {
 
 ## 7. Service-to-service — เมื่อ Quarkus ต้องเรียก API อื่น
 
-ถ้ามี Quarkus service ตัวที่สองที่ต้องเรียกกันเอง (ไม่ใช่ผู้ใช้เป็นคนเรียก) ใช้ **client credentials flow** — client authenticate ด้วยตัวเอง ไม่มีผู้ใช้เกี่ยวข้อง
+ถ้ามี Quarkus service ตัวที่สองที่ต้องเรียกกันเอง (ไม่ใช่ผู้ใช้เป็นคนเรียก) ใช้ **client credentials flow** — client authenticate ด้วยตัวเอง ไม่มีผู้ใช้เกี่ยวข้อง (เทียบกับ grant type อื่นๆ ที่ OAuth มีให้ ดู [[OAuth 2.0]] ข้อ 2)
 
 ```properties
 quarkus.oidc-client.auth-server-url=http://localhost:8180/realms/my-app
@@ -462,6 +462,7 @@ canActivate: [authGuardFn], data: { roles: ['admin'] }
 ## 🔗 เกี่ยวข้อง
 
 - [[Keycloak]] — Keycloak คืออะไร, ใช้ทำอะไรได้บ้างนอกจาก login, OAuth2/OIDC protocol เบื้องหลังแบบไม่ผูก stack
+- [[OAuth 2.0]] — grant type อื่นนอกจาก Authorization Code, เทียบบริการอื่นนอกจาก Keycloak (Auth0, Okta, Cognito, Firebase)
 - [[Quarkus REST Client]] — service-to-service auth ด้วย `quarkus-oidc-client`
 - [[Quarkus HTTP Methods]] — CORS preflight เป็น `OPTIONS` request
 - [[Quarkus Health Check]] — health endpoint ควรเปิดให้เข้าถึงได้โดยไม่ต้อง auth เสมอ

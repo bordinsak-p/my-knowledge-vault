@@ -46,6 +46,8 @@ created: 2026-09-17
 
 **Keycloak ใช้ OIDC** — OAuth2 อย่างเดียวบอกได้แค่ "แอปนี้มีสิทธิ์เรียก API ได้" แต่ไม่ได้รับรองว่า "ผู้ใช้คนนี้คือใคร" จริง ๆ OIDC เติมส่วนนั้นเข้าไปด้วย ID Token
 
+> โน้ตนี้พูดถึง flow เดียวคือ Authorization Code + PKCE เพราะเป็น flow หลักที่ Keycloak/แอปทั่วไปใช้ — ถ้าอยากเห็น grant type อื่น (Client Credentials, Device Authorization, ทำไม ROPC/Implicit เลิกใช้แล้ว) และเทียบบริการอื่นนอกจาก Keycloak (Auth0, Okta, Cognito, Firebase ฯลฯ) ไปที่ [[OAuth 2.0]]
+
 ### 3 token ที่ต้องแยกให้ออก
 
 | Token | ใครใช้ | ใช้ทำอะไร |
@@ -137,6 +139,7 @@ Flow มาตรฐาน: Authorization Code + PKCE (ทุก client type ต
 
 - [[Quarkus Keycloak]] — implement เต็มรูปแบบ Angular + Quarkus พร้อมโค้ดจริงทุกขั้นตอน
 - [[Angular HttpClient]] — interceptor ที่ใช้แนบ Access Token กับทุก request
+- [[OAuth 2.0]] — grant type อื่นนอกจาก Authorization Code (Client Credentials, Device Authorization), เทียบบริการอื่นนอกจาก Keycloak
 
 ## 📖 อ่านต่อ
 

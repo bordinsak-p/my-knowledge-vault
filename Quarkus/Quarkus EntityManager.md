@@ -959,7 +959,7 @@ public int discontinueBefore(LocalDate d) {
 }
 ```
 
-**bulk statement ยิงตรงไปที่ DB ข้าม persistence context** ถ้าไม่ `clear()` แล้วใช้ entity เดิมต่อ จะได้ค่าก่อนอัปเดต — เป็นบั๊กที่หาสาเหตุยากมากเพราะโค้ดดูถูกทุกบรรทัด
+**bulk statement ยิงตรงไปที่ DB ข้าม persistence context** ถ้าไม่ `clear()` แล้วใช้ entity เดิมต่อ จะได้ค่าก่อนอัปเดต — เป็นบั๊กที่หาสาเหตุยากมากเพราะโค้ดดูถูกทุกบรรทัด (ด้วยเหตุผลเดียวกัน bulk statement แบบนี้ก็ไม่ trigger [[Quarkus Hibernate Interceptor]] เลยเช่นกัน)
 
 ---
 
@@ -1058,6 +1058,7 @@ em.createQuery("delete ...").executeUpdate();
 - [[Quarkus Panache]] — ชั้นที่ครอบ EntityManager ให้เขียนสั้นลง
 - [[Quarkus Panache Example]] — โค้ดชุดเดียวกันในสไตล์ Panache
 - [[Java Record]] — ใช้เป็น projection และ DTO
+- [[Quarkus Hibernate Interceptor]] — ดักวงจรชีวิต entity, ทำไม bulk operation (ข้อ 13) ไม่ trigger
 
 ## 📖 อ่านต่อ
 

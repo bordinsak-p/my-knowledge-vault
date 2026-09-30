@@ -227,6 +227,7 @@ quarkus.hibernate-orm.database.generation=none
 - [[Quarkus]] — หน้ารวม
 - [[Quarkus Panache]] — ชั้นที่วางทับ Hibernate อีกที
 - [[Quarkus Build]] — native image
+- [[Quarkus Hibernate Interceptor]] — ดักวงจรชีวิต entity (load/persist/flush/remove) ด้วย `org.hibernate.Interceptor`
 
 ## 📖 อ่านต่อ
 

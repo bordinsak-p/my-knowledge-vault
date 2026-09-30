@@ -86,6 +86,8 @@ getAll(): Observable<Product[]> {
 
 ## 4. Interceptor — แทรก logic กลางทางทุก request
 
+> ชื่อ "interceptor" ตัวนี้เป็นคนละอย่างกับ CDI interceptor ฝั่ง Quarkus (`@Transactional`, custom `@AroundInvoke`) — ตัวนี้ดัก **HTTP request/response** ส่วนฝั่ง Quarkus ดัก **การเรียก method ระดับ Java** ดูความต่างที่ [[Quarkus Interceptor]] ข้อ 4
+
 ```typescript
 // auth.interceptor.ts — functional interceptor (แนวทางปัจจุบัน)
 export const authInterceptor: HttpInterceptorFn = (req, next) => {

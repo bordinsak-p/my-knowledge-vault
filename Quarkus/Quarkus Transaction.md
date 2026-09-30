@@ -10,6 +10,8 @@ created: 2026-09-20
 # 💳 Quarkus Transaction — `@Transactional` และ `QuarkusTransaction`
 
 > Quarkus จัดการ transaction ผ่าน JTA (Narayana) มี 2 ทาง: **`@Transactional`** (ประกาศที่ method — ใช้ส่วนใหญ่) และ **`QuarkusTransaction`** (เขียนโค้ดคุม transaction เองแบบละเอียด — ใช้ตอนต้องการ control ที่ annotation ทำไม่ได้)
+>
+> `@Transactional` ทำงานผ่าน **CDI interceptor** เบื้องหลัง — ถ้าอยากรู้กลไกทั่วไป (priority, self-invocation, ข้อจำกัดของ Quarkus ArC) หรือเขียน interceptor ของตัวเองบ้าง ดู [[Quarkus Interceptor]]
 
 ---
 
@@ -159,6 +161,7 @@ QuarkusTransaction.suspendingExisting().run(() -> { ... })
 
 - [[Quarkus EntityManager]] — EntityManager ผูกอยู่กับ transaction context เสมอ
 - [[Quarkus Thread Pool]] — `@Transactional` ผูกกับ request scope, background thread ต้องจัดการ transaction เองแยกต่างหาก
+- [[Quarkus Interceptor]] — กลไก CDI interceptor ที่ `@Transactional` ใช้อยู่เบื้องหลัง, เขียน custom interceptor เอง
 
 ## 📖 อ่านต่อ
 

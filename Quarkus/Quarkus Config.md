@@ -38,6 +38,19 @@ app.timeout=30
 APP_TIMEOUT=60
 ```
 
+### `application.properties` เกี่ยวกับ deploy ไหม — เหมือน `.env` ไหม
+
+**เกี่ยว — มันคือค่าเริ่มต้นที่ถูก "อบ" ติดไปกับ artifact ที่ deploy จริง** (ordinal 250 ในตารางข้างบน อยู่ใน classpath ของ jar/native binary) **แต่ไม่เหมือน `.env` ทีเดียว** เพราะคนละบทบาทกัน — สับสนกันบ่อยเพราะชื่อไฟล์ `.env` ที่ Quarkus รองรับจริง ๆ (แถว ordinal 295) ดันไปพ้องกับ**แนวคิด** ".env สำหรับเก็บ secret/ค่าเฉพาะเครื่อง" ที่คนคุ้นจาก Node/Docker Compose:
+
+| | `application.properties` | `.env` (แนวคิดที่คนทั่วไปหมายถึง — ไฟล์ secret/ค่าเฉพาะเครื่อง) |
+|---|---|---|
+| อยู่ที่ไหน | commit เข้า repo, **build เข้าไปใน artifact** | ปกติ**ไม่ commit** (ใส่ `.gitignore`) — อยู่แค่บนเครื่องนักพัฒนา |
+| มีผลตอน deploy จริงไหม | ✅ มี — เป็นค่าเริ่มต้นของทุก environment รวม prod | ❌ ไฟล์ `.env` ที่ Quarkus อ่านได้จริง (ordinal 295) **มีผลแค่ตอน dev บนเครื่องนั้นเท่านั้น** ไม่ได้ถูก build เข้า artifact ไปด้วย (ดูกับดักข้อ 5) |
+| ใส่ secret ได้ไหม | ไม่ควร — อยู่ใน repo/artifact ให้ทุกคนที่มี source/jar เห็น | ตามธรรมเนียมคือที่สำหรับใส่ secret |
+| ของจริงที่ทำหน้าที่แทน ".env" ตอน production | **environment variable จริงบนเครื่อง/container** (ordinal 300 — มาตรฐานของ container/Kubernetes) หรือ `config/application.properties` ข้าง ๆ jar (ordinal 260) | — |
+
+**สรุป:** `application.properties` = ค่าตั้งต้นที่ build ติดไปกับ artifact เสมอ (เหมาะกับค่า default ที่ไม่ใช่ secret) ส่วนของที่ทำหน้าที่แบบ ".env" จริง ๆ ใน production (override เฉพาะ environment, ใส่ secret ได้) คือ **environment variable** ไม่ใช่ไฟล์ `.env` — ไฟล์ `.env` ที่ Quarkus รองรับเป็นแค่ความสะดวกตอน dev บนเครื่องเท่านั้น หายไปทันทีที่ package/deploy
+
 ---
 
 ## 2. Profile — ค่าที่ต่างกันตามสภาพแวดล้อม

@@ -216,6 +216,7 @@ quarkus.thread-pool.queue-size=1000
 - [[Quarkus]] — หน้ารวม
 - [[Quarkus Config]] — ตั้งค่า cron expression ผ่าน config property แทน hardcode
 - [[Quarkus WebSocket]] — อีกที่ที่ต้อง push ข้อความจาก thread อื่นในระบบ (ไม่ใช่แค่ตอบกลับ request ตรง ๆ)
+- [[Quarkus Bean]] — scope ต่างๆ ของ CDI bean (`@RequestScoped` vs `@ApplicationScoped` ฯลฯ) ที่โน้ตนี้อ้างถึง
 
 ## 📖 อ่านต่อ
 

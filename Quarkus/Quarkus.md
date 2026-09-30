@@ -21,19 +21,23 @@ created: 2026-08-18
 | โน้ต                        | ว่าด้วย                                                                                                                         | สถานะ      |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | [[Quarkus Project Structure]] | โครงสร้างไฟล์ Maven มาตรฐาน, package-by-layer vs package-by-feature, naming convention, resource→service→repository→entity | ✅ |
+| [[Quarkus Bean]]             | CDI managed bean คืออะไร (ต่างจาก JavaBeans/Spring bean), bean discovery, scope 4 แบบ, `@ApplicationScoped` vs `@Singleton`             | ✅          |
 | [[Quarkus Config]]          | ลำดับความสำคัญของ config source, profile (`%dev`/`%prod`/`%test`/custom), `@ConfigMapping`, build-time vs runtime config         | ✅          |
 | [[Quarkus Thread Pool]]     | `@Scheduled`, `ManagedExecutor`, ทำไม request context ใช้ใน worker thread ไม่ได้, thread pool config, virtual threads             | ✅          |
 | [[Quarkus REST Layer]]      | RESTEasy Classic vs Quarkus REST, smart dispatch, `@Blocking`/`@NonBlocking`, ทำไม block event loop ถึงร้ายแรง, `Uni`/`Multi`     | ✅          |
 | [[Quarkus Hibernate]]       | Hibernate 5→6, type mapping, transaction/persistence context, N+1, bulk insert, multitenancy, native                            | ✅          |
+| [[Quarkus Hibernate Interceptor]] | `org.hibernate.Interceptor` ดัก entity lifecycle (load/persist/flush/remove), เทียบ JPA `@PrePersist`, `@PersistenceUnitExtension` | ✅ |
 | [[Quarkus Flyway]]          | schema history, ชื่อไฟล์ V/R, baseline, callback, multi-datasource, zero-downtime (expand/contract)                             | ✅          |
 | [[Quarkus EntityManager]]   | สไตล์การเขียนแบบไม่ผ่าน Panache — lifecycle, persist/merge, query 4 แบบ, native query + การดัก null, pagination trap            | ✅          |
 | [[Quarkus Transaction]]     | `@Transactional` 6 TxType, rollback rule, `QuarkusTransaction` แบบ programmatic (`begin`/`requiringNew`/`.call()`)              | ✅          |
+| [[Quarkus Interceptor]]     | CDI AOP เบื้องหลัง `@Transactional`/`@CacheResult` — เขียน custom interceptor เอง, `@InterceptorBinding`, priority, ข้อจำกัด ArC | ✅          |
 | [[Quarkus Exception Mapper]] | custom `ExceptionMapper` ฝั่ง server, exception hierarchy matching, catch-all mapper, validation exception                    | ✅          |
 | [[Quarkus Validation]]      | Bean Validation annotation, `@Valid`, custom validator (field-level DB-backed + class-level cross-field)                       | ✅          |
 | [[Quarkus Response]]        | `Response` vs `RestResponse<T>`, static factory method, `created()`, ทำไม `RestResponse` ดีกว่าเรื่อง OpenAPI/native            | ✅          |
 | [[Quarkus Panache]]         | Active record vs repository, query syntax, ข้อจำกัด, ทิศทาง Jakarta Data                                                        | ✅          |
 | [[Quarkus Build]]           | **ขั้นตอนการ build แบบเต็ม** (source→container→deploy), JVM vs native, fast-jar, build-time config                              | ✅          |
 | [[Quarkus CLI]]             | `quarkus create app`, จัดการ extension, `dev`/`build`/`image` ผ่านคำสั่งเดียวไม่ว่า Maven/Gradle, plugin                        | ✅          |
+| [[Quarkus Redis Client]]    | `RedisDataSource` API เต็ม — command group ทุกตัว, reactive vs blocking, transaction, raw command, serialization, testing        | ✅          |
 | [[Quarkus Redis]]           | `quarkus-cache` vs `quarkus-redis-client`, data structure, cache-aside, distributed lock, rate limit, idempotency, Dev Services | ✅          |
 | [[Quarkus REST Client]]     | `@RegisterRestClient`, configKey, header, exception mapper, timeout/retry/circuit breaker, multipart, token propagation         | ✅          |
 | [[Quarkus HTTP Methods]]    | GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS ครบ, safe/idempotent/cacheable, annotation ใน Quarkus, status code คู่กัน                | ✅          |

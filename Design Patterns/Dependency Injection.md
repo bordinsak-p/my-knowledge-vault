@@ -129,6 +129,7 @@ DI (singleton scope) → container ควบคุมให้, inject เข้
 - [[Singleton Pattern]] — pattern ที่ DI container's default scope มักถูกเทียบด้วยเสมอ
 - [[Angular Services and DI]] — ตัวอย่าง DI จริงฝั่ง Angular (`inject()`, `providedIn: 'root'`)
 - [[Quarkus Project Structure]] — ตัวอย่าง DI จริงฝั่ง Quarkus/CDI (`@Inject`, `@ApplicationScoped`)
+- [[Quarkus Bean]] — คำว่า "bean" ที่ CDI ใช้เรียก object ที่ container จัดการให้ (เทียบกับ JavaBeans/Spring bean ด้วย)
 
 ## 📖 อ่านต่อ
 

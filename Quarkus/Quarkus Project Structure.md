@@ -108,6 +108,8 @@ org.acme
 
 ## 4. โครงสร้างสี่ชั้นมาตรฐาน — resource → service → repository → entity
 
+> `@ApplicationScoped`/`@Inject` ที่เห็นทุกคลาสด้านล่างคือกลไก CDI bean — ถ้ายังไม่แน่ใจว่า "bean" คืออะไรกันแน่ ทำไมต้องมี scope annotation ถึงจะ inject ได้ ดู [[Quarkus Bean]] ก่อน
+
 ```java
 // resource/ProductResource.java — บาง แค่รับ/ส่ง HTTP, delegate ให้ service
 @Path("/products")
@@ -193,6 +195,7 @@ src/main/docker/
 - [[Quarkus Build]] — ไฟล์ใน `src/main/resources`/`src/main/docker` ถูกใช้ยังไงตอน build จริง
 - [[Quarkus Flyway]] — โครงสร้างไฟล์ใน `db/migration`
 - [[Dependency Injection]] — หลักการทั่วไปเบื้องหลัง `@Inject`/`@ApplicationScoped`, เทียบกับ Singleton pattern
+- [[Quarkus Bean]] — CDI bean คืออะไร, scope 4 แบบ, ทำไมต้องมี bean-defining annotation ถึง inject ได้
 - [[Quarkus]] — หน้ารวม
 
 ## 📖 อ่านต่อ

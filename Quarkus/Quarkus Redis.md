@@ -36,6 +36,8 @@ created: 2026-08-18
 
 ## 2. `quarkus-cache` — ทางที่ง่ายที่สุด
 
+> นี่คือ **read-through pattern** ในโค้ดจริง — แอปไม่ต้องเขียน if-miss-then-load เอง proxy จัดการให้หมด (เทียบกับ cache-aside/write-through/write-behind แบบทั่วไป ดู [[Cache]] ข้อ 2)
+
 ```java
 @CacheResult(cacheName = "product")
 public Product findByCode(String code) { ... }
@@ -69,7 +71,7 @@ key ใน Redis จะเป็น `cache:{cache-name}:{cache-key}`
 
 ### ⚠️ กับดักของ annotation cache
 
-- **เรียก method ในคลาสเดียวกันเอง cache ไม่ทำงาน** — มันทำงานผ่าน CDI proxy การเรียกภายในไม่ผ่าน proxy
+- **เรียก method ในคลาสเดียวกันเอง cache อาจไม่ทำงาน** — ปกติ CDI proxy ไม่ trigger ตอนเรียกภายใน (`this.xxx()`) แต่ **Quarkus ArC เองรองรับ self-invocation สำหรับ interceptor ทั่วไปแล้ว** (ยืนยันด้วยตัวอย่าง `@Transactional` ในเอกสารทางการ — ดู [[Quarkus Interceptor]] ข้อ 6) ยังไม่ชัดว่า `@CacheResult` เข้าข่ายนี้ด้วยหรือเปล่าในเวอร์ชันที่ใช้อยู่ **ควรทดสอบจริงก่อนเชื่อ** ไม่ใช่ถือว่าพังแน่นอนตามความเข้าใจเดิม
 - method ที่คืน `null` ก็ถูก cache ด้วย ระวังกรณี "ยังไม่มีข้อมูล" ถูกจำไว้
 - ค่า default ไม่มี TTL ต้องตั้ง `expire-after-write` เอง
 
@@ -82,7 +84,7 @@ key ใน Redis จะเป็น `cache:{cache-name}:{cache-key}`
 @Inject ReactiveRedisDataSource rds;     // reactive คืน Uni<T>
 ```
 
-command แยกเป็นกลุ่มตามชนิดข้อมูล **ไม่ใช่ยิง string command ดิบ** — มี type safety
+command แยกเป็นกลุ่มตามชนิดข้อมูล **ไม่ใช่ยิง string command ดิบ** — มี type safety (รายละเอียด API เต็ม: ทุก command group, transaction, raw command, serialization, testing ดู [[Quarkus Redis Client]])
 
 ```java
 ds.value(String.class)      // GET / SET / INCR
@@ -228,7 +230,7 @@ quarkus.redis.session-store.hosts=redis://host-b:6379
   ตั้ง `maxmemory` + `maxmemory-policy allkeys-lru` ไว้เป็นตาข่ายกันตก แต่อย่าใช้แทนการตั้ง TTL
 - **cache invalidation ยากกว่าที่คิด** — แก้ DB แล้วลืมล้าง cache = ผู้ใช้เห็นของเก่า
 - **Redis ล่มแล้วแอปต้องไม่ล่มตาม** — ห่อด้วย try/catch แล้ว fallback ไป DB เสมอ ถือว่า Redis เป็น optimization ไม่ใช่ source of truth
-- **serialization เปลี่ยนแล้วของเก่าพัง** — เปลี่ยนโครงสร้าง class แล้ว deserialize ของเดิมไม่ออก ใส่เวอร์ชันในชื่อ cache (`product-v2`) ตอน deploy ที่มีการเปลี่ยนโครงสร้าง
+- **serialization เปลี่ยนแล้วของเก่าพัง** — เปลี่ยนโครงสร้าง class แล้ว deserialize ของเดิมไม่ออก ใส่เวอร์ชันในชื่อ cache (`product-v2`) ตอน deploy ที่มีการเปลี่ยนโครงสร้าง (หลักการ cache key versioning แบบทั่วไป ดู [[Cache]] ข้อ 8)
 - **`KEYS *` ห้ามใช้บน prod** — มัน block ทั้ง server เพราะ Redis เป็น single-thread ใช้ `SCAN` แทน
 - **Redis single-threaded** — คำสั่งช้าตัวเดียวบล็อกทุกคน ระวัง Lua script ยาว ๆ หรือ operation บน collection ใหญ่มาก
 - **native image** — deserialize ด้วย reflection อาจต้องประกาศคลาสใน reflection config ดู [[Quarkus Build]]
@@ -281,6 +283,9 @@ ds.key().del("k");
 ## 🔗 เกี่ยวข้อง
 
 - [[Quarkus]] — หน้ารวม
+- [[Quarkus Redis Client]] — API เต็มของ `RedisDataSource` (command group ทุกตัว, transaction, raw command, serialization, testing)
+- [[Cache]] — cache pattern แบบทั่วไป (read-through/write-through/write-behind, eviction, stampede, multi-level cache)
+- [[Quarkus Interceptor]] — กลไก CDI interceptor เบื้องหลัง `@CacheResult`, self-invocation ทำงานยังไงจริงๆ
 - [[Quarkus Build]] — reflection config ตอน native
 - [[URL Shortener (Quarkus)]] — เคสที่พิจารณา Redis counter แล้วสรุปว่าไม่ใช้
 

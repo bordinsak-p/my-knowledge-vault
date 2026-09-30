@@ -24,14 +24,17 @@ created: 2026-09-16
 
 ## 2. Data structure หลัก — จุดต่างจาก key-value store ทั่วไป
 
-| structure | เก็บอะไร | ใช้ทำอะไร |
-|---|---|---|
-| **String** | ข้อความ/ตัวเลข/binary (สูงสุด 512MB) | cache ค่าเดี่ยว, token, counter (`INCR`) |
-| **Hash** | field-value คู่กันเหมือน object ย่อย | เก็บ object ทั้งก้อน (เช่น user profile) แก้ทีละ field ได้ |
-| **List** | ลำดับของค่า ซ้ำได้ | queue, feed, recent items |
-| **Set** | กลุ่มค่าไม่ซ้ำ ไม่มีลำดับ | เช็คว่ามีอยู่ไหมเร็ว, ความสัมพันธ์ (tag, follower) |
-| **Sorted Set** | เหมือน Set แต่แต่ละค่ามี score เรียงลำดับ | leaderboard, ranking, priority queue |
-| **Stream** | append-only log เรียงเวลา | event log, message queue อย่างง่าย (คล้าย Kafka แบบย่อ) |
+| structure       | เก็บอะไร                                                | ใช้ทำอะไร                                                        |
+| --------------- | ------------------------------------------------------- | ---------------------------------------------------------------- |
+| **String**      | ข้อความ/ตัวเลข/binary (สูงสุด 512MB)                    | cache ค่าเดี่ยว, token, counter (`INCR`)                         |
+| **Hash**        | field-value คู่กันเหมือน object ย่อย                    | เก็บ object ทั้งก้อน (เช่น user profile) แก้ทีละ field ได้       |
+| **List**        | ลำดับของค่า ซ้ำได้                                      | queue, feed, recent items                                        |
+| **Set**         | กลุ่มค่าไม่ซ้ำ ไม่มีลำดับ                               | เช็คว่ามีอยู่ไหมเร็ว, ความสัมพันธ์ (tag, follower)               |
+| **Sorted Set**  | เหมือน Set แต่แต่ละค่ามี score เรียงลำดับ               | leaderboard, ranking, priority queue                             |
+| **Stream**      | append-only log เรียงเวลา                               | event log, message queue อย่างง่าย (คล้าย Kafka แบบย่อ)          |
+| **Bitmap**      | บิตแต่ละตำแหน่งแทนสถานะ 0/1 หนึ่งตำแหน่ง                | flag/สถานะต่อ user จำนวนมาก, daily-active-user tracking          |
+| **Geo**         | พิกัด (ละติจูด/ลองจิจูด) — ข้างในเก็บบน Sorted Set จริง | หาของใกล้เคียง ("ร้านใกล้ฉัน"), คำนวณระยะทาง                     |
+| **HyperLogLog** | ตัวประมาณจำนวนสมาชิกไม่ซ้ำ ใช้พื้นที่คงที่เล็กมาก       | นับ unique visitor/search term ที่จำนวนมากจนเก็บ Set จริงไม่คุ้ม |
 
 ```bash
 SET user:1:name "สมชาย"
@@ -43,6 +46,10 @@ ZADD leaderboard 100 "player1" 200 "player2"
 ```
 
 **เลือก data structure ให้ตรงกับ "รูปร่าง" ของปัญหา** ไม่ใช่ยัดทุกอย่างเป็น String แล้ว serialize เป็น JSON เก็บ — ใช้ Hash แทน object, ใช้ Sorted Set แทน ranking จะได้ query ตรง ๆ ด้วยคำสั่งที่ Redis ออกแบบมาให้เร็วอยู่แล้ว
+
+**สองอย่างที่ไม่ใช่ "data structure" แต่เจอบ่อยเวลาอ่าน command:**
+- **`KEY` ops** (`EXPIRE`/`TTL`/`DEL`/`EXISTS`/`TYPE`/`RENAME`) — ใช้ได้กับ**ทุก key ไม่ว่าเก็บ type ไหน** ไม่ได้ผูกกับ structure ใดโดยเฉพาะ
+- **JSON** (`JSON.SET`/`JSON.GET`) — เป็น**module เสริม (RedisJSON) ไม่ได้มาให้ตั้งแต่ core Redis** ต้องติดตั้ง module เพิ่มที่ server ถึงจะใช้ได้ (Redis Cloud/Redis Stack มีให้ในตัว, self-host ธรรมดาต้องเพิ่มเอง)
 
 ---
 
@@ -61,6 +68,8 @@ Redis เก็บข้อมูลใน RAM แต่มีกลไกกั
 ---
 
 ## 4. Design pattern ที่ใช้ Redis บ่อยที่สุด
+
+> ข้อ 4.1 เป็นแค่ตัวอย่างการ implement **cache-aside** ด้วย Redis จริง — ถ้าอยากเทียบกับ read-through/write-through/write-behind/write-around, ตาราง eviction policy เต็ม, วิธีแก้ cache stampede (XFetch/stale-while-revalidate), หรือ multi-level cache ไปที่ [[Cache]]
 
 ### 4.1 Cache-aside — pattern ที่ใช้บ่อยที่สุด
 
@@ -129,6 +138,34 @@ PUBLISH notifications "มี order ใหม่"
 
 **⚠️ Redis Pub/Sub เป็น fire-and-forget — ถ้าไม่มี subscriber ฟังอยู่ตอนนั้น ข้อความหายไปเลย ไม่มี queue เก็บไว้ให้** ต่างจาก message broker จริงจัง (ดู [[RabbitMQ]]) ที่รับประกันว่าข้อความไม่หาย เหมาะกับ broadcast ที่พลาดบางข้อความได้ (เช่น live notification บนหน้าจอ) ไม่เหมาะกับงานที่ต้องรับประกันว่าประมวลผลครบทุกข้อความ
 
+### 4.7 นับ unique แบบประหยัดพื้นที่ — HyperLogLog
+
+```bash
+PFADD visitors:2026-09-29 "192.168.1.1" "192.168.1.2" "192.168.1.1"
+PFCOUNT visitors:2026-09-29     # ≈ 2 (ไม่นับซ้ำ 192.168.1.1)
+```
+
+เก็บ Set จริงของ IP/user นับล้านตัวกิน memory มาก — HyperLogLog ใช้พื้นที่**คงที่แค่ ~12KB ไม่ว่าจะมีสมาชิกกี่ล้านตัว** แลกมาด้วยความแม่นยำที่ไม่เป๊ะ 100% (error rate ปกติ < 1%) **ใช้เมื่อ "ประมาณพอ" ใช้ได้** (นับ unique visitor ต่อวันขึ้น dashboard) — ห้ามเอาไปใช้กับที่ต้องเป๊ะจริง เช่น billing/audit
+
+### 4.8 หาของใกล้เคียง — Geo
+
+```bash
+GEOADD shops 100.5018 13.7563 "shop:central"
+GEOSEARCH shops FROMLONLAT 100.50 13.75 BYRADIUS 5 km ASC
+```
+
+พิกัดถูกเก็บอยู่บน **Sorted Set จริง ๆ ข้างใน** (score คำนวณจาก geohash) — คำสั่งกลุ่ม `GEO*` เป็นชั้นสะดวกที่คำนวณระยะทาง/ค้นหาในรัศมีให้เสร็จ ใช้ทำ "หาร้าน/คนขับที่อยู่ใกล้ที่สุด" โดยไม่ต้องคำนวณสูตร haversine เองที่ฝั่งแอป
+
+### 4.9 Flag/attendance เยอะ ๆ แบบกระชับ — Bitmap
+
+```bash
+SETBIT login:2026-09-29 1042 1       # user id 1042 login วันนี้
+BITCOUNT login:2026-09-29             # จำนวนคน login วันนี้
+BITOP AND result login:2026-09-27 login:2026-09-28 login:2026-09-29   # login ครบ 3 วันติด
+```
+
+1 bit ต่อ 1 user ต่อ 1 วัน — ผู้ใช้ 1 ล้านคนกินพื้นที่แค่ ~125KB ต่อวัน ใช้ทำ daily-active-user tracking หรือ "login ครบ N วันติดรับรางวัล" (`BITOP AND` ระหว่างหลายวัน)
+
 ---
 
 ## 5. Webapp เอาไปใช้ประโยชน์อะไรได้บ้าง
@@ -153,9 +190,9 @@ PUBLISH notifications "มี order ใหม่"
 
 ## 6. กับดัก
 
-- **Cache stampede** — cache หมดอายุพร้อมกันตอน traffic สูง ทำให้ request จำนวนมากยิง DB พร้อมกันในจังหวะเดียว (thundering herd) — แก้ด้วยการสุ่ม TTL เล็กน้อยไม่ให้หมดอายุพร้อมกันเป๊ะ หรือใช้ lock กันซ้ำตอน refetch
-- **Cache invalidation ยากกว่าที่คิด** — ("มีสองเรื่องยากใน computer science: cache invalidation กับตั้งชื่อตัวแปร") ข้อมูลใน cache กับ DB ไม่ตรงกันได้ถ้า invalidate ไม่ครบทุก path ที่แก้ข้อมูล
-- **RAM มีจำกัด** — ถ้าใส่ข้อมูลเกิน memory ที่ตั้งไว้ Redis จะ evict (ไล่) key ทิ้งตาม policy ที่ตั้ง (เช่น LRU) ต้องเลือก eviction policy ให้เหมาะกับงาน ไม่งั้น key สำคัญอาจถูกไล่ทิ้งไปเฉย ๆ
+- **Cache stampede** — cache หมดอายุพร้อมกันตอน traffic สูง ทำให้ request จำนวนมากยิง DB พร้อมกันในจังหวะเดียว (thundering herd) — แก้ด้วยการสุ่ม TTL เล็กน้อยไม่ให้หมดอายุพร้อมกันเป๊ะ หรือใช้ lock กันซ้ำตอน refetch (เทคนิคละเอียดกว่านี้ เช่น probabilistic early expiration ดู [[Cache]] ข้อ 5)
+- **Cache invalidation ยากกว่าที่คิด** — ("มีสองเรื่องยากใน computer science: cache invalidation กับตั้งชื่อตัวแปร") ข้อมูลใน cache กับ DB ไม่ตรงกันได้ถ้า invalidate ไม่ครบทุก path ที่แก้ข้อมูล (ทำไม "delete" ปลอดภัยกว่า "update ทับ" ดู [[Cache]] ข้อ 4.2)
+- **RAM มีจำกัด** — ถ้าใส่ข้อมูลเกิน memory ที่ตั้งไว้ Redis จะ evict (ไล่) key ทิ้งตาม policy ที่ตั้ง (เช่น LRU) ต้องเลือก eviction policy ให้เหมาะกับงาน ไม่งั้น key สำคัญอาจถูกไล่ทิ้งไปเฉย ๆ (เทียบ LRU/LFU/FIFO/Random เต็มๆ ดู [[Cache]] ข้อ 3)
 - **Pub/Sub message หายถ้าไม่มีคนฟัง** — ใช้ผิดที่ (คาดหวังว่าจะไม่หาย) ข้อมูลหายไปเงียบ ๆ (ข้อ 4.6)
 - **Single point of failure ถ้าไม่มี replica** — Redis instance เดียวพังแล้วทุกอย่างที่พึ่งมันพังตาม ต้องมี replication/cluster สำหรับงานที่ downtime ยอมรับไม่ได้
 - **ลืมตั้ง TTL** — ข้อมูลค้างอยู่ตลอดไปจนกิน memory หมด หรือข้อมูลเก่าที่ไม่อัปเดตอีกเลย
@@ -205,6 +242,11 @@ DEL lock:x
 # Pub/Sub
 SUBSCRIBE channel
 PUBLISH channel "message"
+
+# Bitmap / Geo / HyperLogLog
+SETBIT flags:x 5 1
+GEOADD places 100.50 13.75 "shop:1"
+PFADD uniques "a" "b"
 ```
 
 | อาการ | สาเหตุ |
@@ -221,6 +263,7 @@ PUBLISH channel "message"
 
 - [[RabbitMQ]] — message broker ที่รับประกันการส่งข้อความ ต่างจาก Redis Pub/Sub
 - [[Quarkus Redis]] — วิธีใช้ Redis จริงในโค้ด Quarkus (`quarkus-cache` vs `quarkus-redis-client`, ตัวอย่าง Dev Services)
+- [[Cache]] — cache pattern แบบทั่วไปไม่ผูก Redis (read-through/write-through/write-behind, eviction policy, cache stampede, multi-level cache)
 
 ## 📖 อ่านต่อ
 

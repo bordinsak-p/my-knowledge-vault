@@ -22,6 +22,7 @@ created: 2026-09-20
 | [[Strategy Pattern]] | สลับ algorithm/พฤติกรรมได้โดยไม่แก้โค้ดเดิม, ต่างจาก State ยังไง | ✅ |
 | [[Observer Pattern]] | แจ้งเตือนแบบ one-to-many, รากฐานของ [[Observable]]/RxJS ทั้งระบบ | ✅ |
 | [[Idempotency]] | ไม่ใช่ GoF pattern แต่ถูกถามคู่กันบ่อย — idempotency key, exactly-once เป็นไปไม่ได้จริง, claim pattern | ✅ |
+| [[Cache]] | cache-aside/read-through/write-through/write-behind/write-around, eviction policy, invalidation, cache stampede (XFetch), multi-level cache | ✅ |
 
 **เริ่มอ่านคู่กัน** — คำถามสัมภาษณ์คลาสสิกที่สุดคือ "Singleton pattern กับ DI container's singleton scope ต่างกันยังไง" อยู่ใน [[Dependency Injection]] ข้อ 5 และ "Strategy vs State ต่างกันยังไง" อยู่ใน [[Strategy Pattern]] ข้อ 5
 

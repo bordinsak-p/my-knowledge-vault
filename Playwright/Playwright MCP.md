@@ -67,7 +67,7 @@ agent จะ: เปิด browser จริง → อ่าน accessibility t
 ## 6. Cheat sheet
 
 ```bash
-npx @playwright/mcp@latest        # รัน MCP server (ปกติ client เป็นคนเรียกให้เองตาม config)
+npx @playwright/mcp@latest  # รัน MCP server (ปกติ client เป็นคนเรียกให้เองตาม config)
 ```
 
 | ต้องการ                                         | ใช้                                                  |

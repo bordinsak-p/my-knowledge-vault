@@ -71,7 +71,9 @@ assertEquals(expected, actual);              // ⚠️ ลำดับ: ค่�
 assertTrue(condition);
 assertNotNull(result);
 
-assertThrows(IllegalArgumentException.class, () -> service.create(invalidRequest));
+assertThrows(
+	IllegalArgumentException.class, () -> service.create(invalidRequest)
+);
 
 assertAll(                                    // รันทุกอันแม้บางอันจะ fail แล้วรายงานพร้อมกันทั้งหมด
     () -> assertEquals("P001", product.getCode()),

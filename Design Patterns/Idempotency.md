@@ -172,6 +172,7 @@ UPDATE jobs SET status='PROCESSING' WHERE id=? AND status='PENDING';
 - [[Quarkus REST Client]] — ทำไม retry logic ต้องรู้ว่า operation ไหน idempotent ก่อน retry อัตโนมัติ
 - [[Quarkus Redis]] — ตัวอย่าง implement idempotency key จริงด้วย Redis (ข้อ 5.4)
 - [[Thai QR Payment]] — ตัวอย่างในโลกจริง: webhook แจ้งชำระเงินที่ถูกส่งซ้ำ (`retryFlag`) ต้อง claim ก่อนทำ (ข้อ 6.4)
+- [[Design Spec]] (LINE Slip Bot) — อีกตัวอย่างจริง: LINE ส่ง webhook ซ้ำ (redelivery) ต้อง dedupe ด้วย `webhookEventId` (ข้อ 3.1 ③)
 - [[Design Patterns]] — หน้ารวม
 
 ## 📖 อ่านต่อ

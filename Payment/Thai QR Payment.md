@@ -692,6 +692,7 @@ claude /mcp
 - [[Java Data Type]] — ทำไมเงินห้ามใช้ `double` · [[Java JUnit 5]] — เขียนเทสต์ payload
 - [[Keycloak]] · [[Quarkus Keycloak]] — `sub` เป็น alias ที่นิ่งของ user (ข้อ 8)
 - [[URL Shortener (Quarkus)]] · [[Cloudflare]] · [[Docker Network and Volume]] — ตัวอย่าง indirection ในโน้ตอื่น
+- [[LINE Slip Bot]] — โปรเจกต์ Greenhouse ที่ใช้ความรู้ข้อ 2 (TLV/CRC) และข้อ 6 (ไม่เชื่อสลิป ต้องตรวจกับผู้ให้บริการ) กับสลิปจริงใน LINE
 
 ## 📖 แหล่งอ้างอิง
 

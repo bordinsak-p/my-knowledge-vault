@@ -98,6 +98,7 @@ updated: 2026-09-28
 - [[RabbitMQ]] — ทางเลือกกลไก trigger แบบ message queue (เฟส 2)
 - [[Idempotency]] — หลักการเบื้องหลัง claim/retry ที่โปรเจกต์นี้ฝึกตรงๆ
 - [[Java OOP]] — แนวคิด notification channel (interface + polymorphism) ที่ `MockNotificationClient` ใช้
+- [[LINE Slip Bot]] — โปรเจกต์ที่ flow รับสลิปใช้ claim คิวแบบเดียวกัน (`FOR UPDATE SKIP LOCKED`) กับงานจริง
 - [[Greenhouse]]
 
 ## 📝 Log

@@ -140,6 +140,7 @@ Flow มาตรฐาน: Authorization Code + PKCE (ทุก client type ต
 - [[Quarkus Keycloak]] — implement เต็มรูปแบบ Angular + Quarkus พร้อมโค้ดจริงทุกขั้นตอน
 - [[Angular HttpClient]] — interceptor ที่ใช้แนบ Access Token กับทุก request
 - [[OAuth 2.0]] — grant type อื่นนอกจาก Authorization Code (Client Credentials, Device Authorization), เทียบบริการอื่นนอกจาก Keycloak
+- [[Auth Flow Spec]] — แผนที่ auth ทุกแบบ + สเปคลงมือสร้าง (Keycloak เป็น IdP หลักของโปรเจกต์ [[Auth Flows Lab]])
 
 ## 📖 อ่านต่อ
 

@@ -463,6 +463,7 @@ canActivate: [authGuardFn], data: { roles: ['admin'] }
 
 - [[Keycloak]] — Keycloak คืออะไร, ใช้ทำอะไรได้บ้างนอกจาก login, OAuth2/OIDC protocol เบื้องหลังแบบไม่ผูก stack
 - [[OAuth 2.0]] — grant type อื่นนอกจาก Authorization Code, เทียบบริการอื่นนอกจาก Keycloak (Auth0, Okta, Cognito, Firebase)
+- [[Auth Flow Spec 2 — OAuth OIDC]] — BFF แทน SPA ตรงๆ (`quarkus.oidc.application-type=web-app`), token exchange, DPoP, logout 3 แบบ · [[Auth Flow Spec]] — auth แบบอื่นทั้งหมด
 - [[Quarkus REST Client]] — service-to-service auth ด้วย `quarkus-oidc-client`
 - [[Quarkus HTTP Methods]] — CORS preflight เป็น `OPTIONS` request
 - [[Quarkus Health Check]] — health endpoint ควรเปิดให้เข้าถึงได้โดยไม่ต้อง auth เสมอ

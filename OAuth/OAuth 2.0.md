@@ -146,6 +146,8 @@ Grant ที่เลิกใช้แล้ว (RFC 9700): Implicit, ROPC (Pas
 
 - [[Keycloak]] — OAuth2 vs OIDC, 3 token (ID/Access/Refresh), Authorization Code+PKCE แบบเต็ม, checklist implement ทั่วไป
 - [[Quarkus Keycloak]] — โค้ดจริง Angular + Quarkus ทุกขั้นตอน รวม Client Credentials (ข้อ 7)
+- [[Auth Flow Spec 2 — OAuth OIDC]] — โน้ตนี้ลงระดับ HTTP จริง: request/response ของแต่ละ grant, checklist ที่ต้องตรวจ, DPoP/PAR/step-up, BFF vs SPA ตรงๆ (RFC 10017), logout ทั้ง 3 แบบ
+- [[Auth Flow Spec]] — แผนที่ auth ทุกแบบนอกจาก OAuth (session, API key, JWT ออกเอง, SAML, passkey, mTLS, HMAC ฯลฯ) พร้อมวิธีเลือก
 - [[Supabase]] — ตัวอย่าง Agent Skill/MCP ของ auth provider หนึ่งเจ้า
 - [[Idempotency]] — หลักการที่เกี่ยวกับ token/retry (idempotency key ก็เป็นแนวคิดคู่กับ OAuth client credential rotation)
 

@@ -123,6 +123,7 @@ updated: 2026-10-03
 - [[Quarkus REST Client]] — เรียก Gemini/Slip API
 - [[Cloudflare]] — Cloudflare Tunnel (webhook ตอน dev ด้วย quick tunnel)
 - [[OAuth 2.0]] — LINE Login สำหรับแอดมิน
+- [[Auth Flow Spec 3 — Federation Enterprise]] — LINE Login v2.1 ระดับ HTTP (endpoint, PKCE `S256` อย่างเดียว, อายุ token) + ข้อสังเกตเรื่อง `userId` ต่อ provider ที่ยังไม่ได้ตรวจ · [[Auth Flow Spec 4 — MFA Passkeys Machine]] — การตรวจ `x-line-signature` (ข้อ D6) พร้อมผลรันจริง
 - [[Java OOP]] — `SlipVerifier`/`ReceiptReader` คือ interface + polymorphism แบบเดียวกับ notification channel
 - [[Greenhouse]]
 

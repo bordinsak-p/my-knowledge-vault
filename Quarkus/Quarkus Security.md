@@ -186,6 +186,7 @@ public class MyTenantResolver implements TenantResolver { ... }
 
 - [[Quarkus Keycloak]] — พื้นฐาน OIDC/Keycloak+Angular, `@Authenticated`, `@RolesAllowed`, CORS
 - [[Quarkus REST Layer]] — เหตุผลที่ห้าม block event loop ใน `SecurityIdentityAugmentor`/`TenantConfigResolver`
+- [[Auth Flow Spec]] — authentication ทุกแบบใน Quarkus (Basic, form, JWT, API key ที่เขียน `HttpAuthenticationMechanism` เอง, mTLS, WebAuthn) พร้อมผลรันจริง
 - [[Quarkus]] — หน้ารวม
 
 ## 📖 อ่านต่อ

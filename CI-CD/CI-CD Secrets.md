@@ -216,6 +216,7 @@ environment {
 - [[CI-CD]] — หน้ารวม
 - [[Self-Hosted Runners]] — ความเสี่ยงเรื่อง secret รั่วผ่าน fork PR ที่รันบน self-hosted runner
 - [[GitHub Actions Workflow Syntax]] — `permissions`, `env`, syntax การใช้ secret ใน step
+- [[Auth Flow Spec 4 — MFA Passkeys Machine]] — workload identity (ข้อ D7) ในภาพรวมของ auth แบบอื่นๆ
 
 ## 📖 อ่านต่อ
 

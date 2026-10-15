@@ -7,7 +7,7 @@ type: spec
 status: ready
 parent: "[[URL Shortener (Quarkus)]]"
 created: 2026-09-11
-updated: 2026-09-27
+updated: 2026-10-03
 ---
 
 # 🛠️ API Flow Spec — URL Shortener
@@ -33,6 +33,17 @@ updated: 2026-09-27
 | column | type | null ได้ไหม | หมายเหตุ |
 |---|---|---|---|
 | `word` | `VARCHAR` | ❌ (PK) | คำที่ห้ามใช้เป็น `custom_alias` เช่น `api`, `admin`, `health`, `q` — seed ไว้ตอน migration แรก เพิ่ม/ลบทีหลังได้โดยไม่ redeploy |
+
+### Cache — Redis (ไม่ใช่ Caffeine)
+
+| รายการ | ค่า |
+|---|---|
+| key | `short-url:{code}` |
+| value | JSON `{ "originalUrl", "expiresAt" }` (`expiresAt` เป็น `null` ได้) |
+| TTL | `SETEX` 10 นาที (ตัวอย่าง) |
+| เก็บเฉพาะ | ผลที่ FOUND เท่านั้น — `404`/`410` ไม่ cache ไม่งั้น link ที่เพิ่งสร้าง/ลบแล้วจะค้างผิดจนกว่า TTL หมด |
+| Redis ล่ม | fallback ไป DB (ยัง redirect ได้ ช้าลงเท่านั้น) log warning ไว้ |
+| client | `quarkus-redis-client` (`RedisDataSource`) เรียก `GET` / `SETEX` / `DEL` เอง |
 
 ---
 
@@ -87,12 +98,13 @@ public static String generateCode(int length) {
 5. บน SQLite: insert แต่ละครั้งแย่งไฟล์ lock กับ writer อื่น (single-writer) — ไม่กระทบตอนใช้งานคนเดียว แต่ถ้าทดสอบสร้าง link รัว ๆ พร้อมกันหลาย thread จะเห็นการ serialize/`SQLITE_BUSY` ได้ (นับรวมอยู่ใน retry 3 ครั้งด้านบน)
 
 **Response**
-| status | เมื่อไหร่ 
-|--------|---------------------------------------------------------------------------------------  |
-| `201` | สำเร็จ → `{ "code", "short_url", "expires_at" }`                                             |
-| `400` | url ไม่ผ่าน validate / scheme ไม่ผ่าน / alias ผิด format                                              |
-| `409` | `custom_alias` ชนของเดิม หรือชนคำสงวน                                                                 |
-| `500` | retry ครบ 3 ครั้งแล้วยังไม่สำเร็จ (ชน unique constraint ต่อเนื่อง หรือ SQLite ยัง busy)  |
+
+| status | เมื่อไหร่                                                                               |
+| ------ | --------------------------------------------------------------------------------------- |
+| `201`  | สำเร็จ → `{ "code", "short_url", "expires_at" }`                                        |
+| `400`  | url ไม่ผ่าน validate / scheme ไม่ผ่าน / alias ผิด format                                |
+| `409`  | `custom_alias` ชนของเดิม หรือชนคำสงวน                                                   |
+| `500`  | retry ครบ 3 ครั้งแล้วยังไม่สำเร็จ (ชน unique constraint ต่อเนื่อง หรือ SQLite ยัง busy) |
 
 **🧪 ตัวอย่างจริง**
 
@@ -196,12 +208,12 @@ sequenceDiagram
 ### `GET /{code}` — redirect (hot path, ไม่ auth)
 
 1. route คำสงวน (`/api/*`, `/health`, …) ต้องกันไว้ก่อนตกมาถึง handler นี้ ไม่ใช่เช็คทีหลัง
-2. lookup cache (Caffeine) → hit ข้ามไปข้อ 4
-3. cache miss → query DB ด้วย `code`
-   - ไม่เจอแถวเลย → `404`
-   - เจอแต่ `deleted_at` ไม่ null → `410 Gone` body `{ "reason": "deleted" }`
-   - เจอแต่ `expires_at` ผ่านไปแล้ว → `410 Gone` body `{ "reason": "expired", "expired_at": ... }`
-   - เจอและยังใช้ได้ → populate cache แล้วไปข้อ 4
+2. `GET short-url:{code}` ใน Redis → hit (เป็น FOUND) → ตรวจ `expires_at` อีกรอบ (ถ้าหมดแล้วให้ตอบ `410 expired` ทันที) แล้วไปข้อ 4
+3. cache miss หรือ Redis ใช้ไม่ได้ → query DB ด้วย `code`
+   - ไม่เจอแถวเลย → `404` (**ไม่ cache**)
+   - เจอแต่ `deleted_at` ไม่ null → `410 Gone` body `{ "reason": "deleted" }` (**ไม่ cache**)
+   - เจอแต่ `expires_at` ผ่านไปแล้ว → `410 Gone` body `{ "reason": "expired", "expired_at": ... }` (**ไม่ cache**)
+   - เจอและยังใช้ได้ → `SETEX short-url:{code} <ttl> <json>` แล้วไปข้อ 4
 4. ยิง click event เข้าคิว **แบบ async / fire-and-forget** (ห้าม synchronous UPDATE บน hot path) ดู [[Quarkus Redis]]
 5. ตอบ `302` พร้อม header `Location: original_url`
 
@@ -211,18 +223,18 @@ sequenceDiagram
 sequenceDiagram
     participant C as Client
     participant R as GET /{code}
-    participant Cache as Caffeine
+    participant Cache as Redis
     participant DB as DB
     participant Q as Queue
 
     C->>R: GET /{code}
-    R->>Cache: lookup
-    alt cache hit
-        Cache-->>R: original_url
-    else cache miss
+    R->>Cache: GET short-url:{code}
+    alt cache hit (FOUND)
+        Cache-->>R: original_url, expires_at
+    else cache miss หรือ Redis down
         R->>DB: SELECT by code
         DB-->>R: row หรือไม่เจอ
-        R->>Cache: populate
+        R->>Cache: SETEX (เฉพาะกรณีเจอและใช้ได้)
     end
     R->>Q: emit click event (async)
     R-->>C: 302 Location: original_url
@@ -232,11 +244,11 @@ sequenceDiagram
 
 **ทำไมต้องมี:** short link ซ่อนปลายทางไว้ — เห็นแค่ `.../aB3xK9z` ไม่รู้เลยว่ากดแล้วไปไหน (ช่องทางฟิชชิ่งคลาสสิก) preview page คือทางให้ "ดูปลายทางก่อน โดยยังไม่ไปจริง" วิธีเรียกคือเติม `+` ต่อท้าย code (หลายเจ้าใช้ convention คล้ายกันนี้) และ `+` ไม่อยู่ใน alphabet base62 จึงไม่มีทางชนกับ code จริง
 
-| | `GET /aB3xK9z` | `GET /aB3xK9z+` |
-|---|---|---|
-| ตอบ | `302` + `Location` | `200` + HTML page |
-| browser | เด้งไปปลายทางทันที | อยู่ที่หน้าเรา แสดงปลายทางให้ดูก่อน |
-| นับ click | นับ | **ไม่นับ** |
+|           | `GET /aB3xK9z`     | `GET /aB3xK9z+`                     |
+| --------- | ------------------ | ----------------------------------- |
+| ตอบ       | `302` + `Location` | `200` + HTML page                   |
+| browser   | เด้งไปปลายทางทันที | อยู่ที่หน้าเรา แสดงปลายทางให้ดูก่อน |
+| นับ click | นับ                | **ไม่นับ**                          |
 
 **หน้าที่ตอบกลับ (ตัวอย่างเนื้อหา):**
 ```
@@ -280,7 +292,7 @@ sequenceDiagram
 1. หาแถวด้วย `code` → ไม่เจอ → `404`
 2. เจอแต่ `deleted_at` ไม่ null อยู่แล้ว → `410` body `{ "reason": "deleted" }` (idempotent)
 3. soft delete: `UPDATE ... SET deleted_at = now` (ไม่ hard delete เพื่อให้ preview/redirect ตอบ `410` แทน `404` ได้)
-4. invalidate cache entry ทันที (local cache ก่อน, ต้องคิดเรื่อง multi-instance ตอนย้ายไป Redis)
+4. `DEL short-url:{code}` ใน Redis ทันที — ทุกเครื่องเห็นการลบพร้อมกัน (Redis เป็น cache กลาง ไม่ต้องล้างทีละ instance)
 
 **Response:** `204` สำเร็จ, `404` ไม่เจอ, `410` ถูกลบไปแล้ว (ถึงแม้ link จะหมดอายุด้วยก็ตาม ยัง soft-delete สำเร็จได้ปกติ — DELETE เช็คแค่ `deleted_at` ไม่สนใจ `expires_at`)
 

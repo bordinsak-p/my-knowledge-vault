@@ -35,7 +35,8 @@ quarkus.datasource.jdbc.url=jdbc:mariadb://localhost:3306/shop
 quarkus.datasource.username=app
 quarkus.datasource.password=secret
 
-quarkus.hibernate-orm.database.generation=none
+# ชื่อใหม่ตั้งแต่ Quarkus 3.23 (เดิม database.generation)
+quarkus.hibernate-orm.schema-management.strategy=none
 %dev.quarkus.hibernate-orm.log.sql=true
 quarkus.hibernate-orm.jdbc.statement-batch-size=50
 ```

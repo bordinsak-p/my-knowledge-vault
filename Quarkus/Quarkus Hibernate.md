@@ -202,7 +202,8 @@ quarkus.hibernate-orm.fetch.batch-size=16
 quarkus.hibernate-orm.dialect=org.hibernate.dialect.MariaDBDialect
 
 # prod ไม่ควรให้ Hibernate ไปแตะ schema
-quarkus.hibernate-orm.database.generation=none
+# (ชื่อใหม่ตั้งแต่ Quarkus 3.23 — เดิมคือ database.generation ยังใช้ได้แต่ deprecated)
+quarkus.hibernate-orm.schema-management.strategy=none
 ```
 
 ---

@@ -52,7 +52,13 @@ Flyway สร้างตารางพิเศษชื่อ `flyway_schema_
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-jdbc-mariadb</artifactId>   <!-- ตามยี่ห้อ DB จริง -->
 </dependency>
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-mysql</artifactId>           <!-- module ของ Flyway ตาม DB (MariaDB/MySQL ใช้ตัวนี้) -->
+</dependency>
 ```
+
+**Flyway 10+ แยก module ตาม DB** — เอกสาร Quarkus ระบุว่า ถ้าไม่ใช่ DB แบบ in-memory/ไฟล์ (H2, SQLite) ต้องเพิ่ม Flyway module ที่ตรงกับ DB ที่ใช้เสมอ: MariaDB/MySQL → `flyway-mysql`, PostgreSQL → `flyway-database-postgresql` (ตัวอย่างเต็มกับ Postgres ดู [[Quarkus + flyway connect supabase]])
 
 โครงสร้างไฟล์ default
 
@@ -172,7 +178,7 @@ quarkus.flyway.clean-disabled=true
 %prod.quarkus.flyway.clean-disabled=true
 ```
 
-`flyway.clean()` **ลบทุกตารางในทุก schema ที่ config ไว้** ทำเผลอบน prod หนึ่งครั้งคือข้อมูลหายทั้งฐาน — ใน Quarkus เวอร์ชันใหม่ `clean-disabled` เป็น `true` โดย default อยู่แล้ว แต่ **ควรใส่ให้เห็นชัดเจนใน config เอง** ไม่ใช่หวังพึ่ง default เงียบ ๆ
+`flyway.clean()` **ลบทุกตารางในทุก schema ที่ config ไว้** ทำเผลอบน prod หนึ่งครั้งคือข้อมูลหายทั้งฐาน — **default ของ `quarkus.flyway.clean-disabled` ใน Quarkus คือ `false`** (ตาม [Quarkus guide](https://quarkus.io/guides/flyway) และซอร์สของ extension) ไม่ตั้ง = `clean()` ทำงานได้เลย จึง **ต้องใส่ `true` เองใน config ของ prod เสมอ** ไม่ใช่หวังพึ่ง default
 
 ---
 
@@ -214,6 +220,8 @@ flowchart TD
 ```
 
 **สำคัญมาก:** `baseline-on-migrate=true` ควรเปิดแค่ตอนเริ่มใช้ Flyway ครั้งแรกเท่านั้น จากนั้นควรปิดกลับ ไม่งั้นถ้ามีใครลบ history table โดยไม่ตั้งใจ Flyway จะ baseline ใหม่เงียบ ๆ แทนที่จะ error เตือน
+
+**`baseline-version` = เวอร์ชันที่ DB เดิมถือว่าเทียบเท่า** (Flyway ข้าม migration ที่ version เท่ากับหรือต่ำกว่านี้) — ถ้าของเดิมคือ schema ของเราเอง (ตัวอย่างข้างบน) ใช้ `1` แล้ว migration ใหม่เริ่มที่ `V2` แต่ถ้าของเดิมไม่ใช่ของ migration เรา เช่น object ของระบบที่ Supabase ใส่ไว้ใน `public` ต้องใช้ `0` เพื่อให้ `V1` รันได้ ไม่งั้นถูกข้ามเงียบ ๆ — ตัวอย่างจริงดู [[Quarkus + flyway connect supabase]]
 
 ---
 
@@ -376,7 +384,8 @@ R__some_view.sql            ← รันใหม่ทุกครั้งท
 
 ## 🔗 เกี่ยวข้อง
 
-- [[Quarkus Hibernate]] — `quarkus.hibernate-orm.database.generation=none` ควรคู่กับ Flyway เสมอ อย่าให้ Hibernate จัดการ schema เอง
+- [[Quarkus Hibernate]] — `quarkus.hibernate-orm.schema-management.strategy=none` (ชื่อใหม่ของ `database.generation` ตั้งแต่ Quarkus 3.23) ควรคู่กับ Flyway เสมอ อย่าให้ Hibernate จัดการ schema เอง
+- [[Quarkus + flyway connect supabase]] — ตัวอย่างจริง: ต่อ Flyway เข้ากับ Supabase (Postgres) ผ่าน Session pooler, baseline-version=0, error ที่เจอ
 - [[Quarkus Health Check]] — migration ที่ fail ทำให้ไม่มี health endpoint ให้เช็คด้วยซ้ำ
 - [[Quarkus Build]] — build-time vs runtime config หลักการเดียวกับที่ทำให้บาง Flyway property ต้องตั้งถูกตั้งแต่ build
 - [[Quarkus]] — หน้ารวม

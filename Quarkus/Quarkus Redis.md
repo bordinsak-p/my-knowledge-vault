@@ -58,7 +58,7 @@ public void reloadAll() { ... }
 
 ### จุดขายจริงของมัน: เปลี่ยน backend โดยไม่แตะโค้ด
 
-default เป็น **Caffeine** (in-memory ของ process นั้น) พอต้องการแชร์ข้ามเครื่อง เพิ่ม `quarkus-redis-cache` **โค้ดไม่ต้องแก้เลยสักบรรทัด**
+default เป็น **Caffeine** (in-memory ของ process นั้น — รายละเอียดดู [[Java Caffeine]]) พอต้องการแชร์ข้ามเครื่อง เพิ่ม `quarkus-redis-cache` **โค้ดไม่ต้องแก้เลยสักบรรทัด**
 
 ```properties
 quarkus.cache.type=redis
@@ -285,6 +285,7 @@ ds.key().del("k");
 - [[Quarkus]] — หน้ารวม
 - [[Quarkus Redis Client]] — API เต็มของ `RedisDataSource` (command group ทุกตัว, transaction, raw command, serialization, testing)
 - [[Cache]] — cache pattern แบบทั่วไป (read-through/write-through/write-behind, eviction, stampede, multi-level cache)
+- [[Java Caffeine]] — backend default ของ `quarkus-cache`: config `quarkus.cache.caffeine."ชื่อ".*`, ไม่ตั้ง eviction = ไม่ไล่, expire vs refresh
 - [[Quarkus Interceptor]] — กลไก CDI interceptor เบื้องหลัง `@CacheResult`, self-invocation ทำงานยังไงจริงๆ
 - [[Quarkus Build]] — reflection config ตอน native
 - [[URL Shortener (Quarkus)]] — เคสที่พิจารณา Redis counter แล้วสรุปว่าไม่ใช้

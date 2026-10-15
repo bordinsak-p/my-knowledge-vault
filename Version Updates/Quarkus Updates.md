@@ -30,7 +30,7 @@ Quarkus ไม่ได้ออก major version ใหม่ตามรอบ
 
 ## 2. Quarkus 3.33 (LTS, มี.ค. 2026) — baseline ที่ควรใช้ตอนนี้
 
-- **Cache หลาย backend พร้อมกันได้ในแอปเดียว** — เลือก backend ต่างกันต่อ cache แต่ละตัว เช่น Caffeine (in-memory, เร็ว) สำหรับข้อมูล hot + Redis (distributed) สำหรับข้อมูลที่ต้องแชร์ข้าม instance (ดู [[Redis]])
+- **Cache หลาย backend พร้อมกันได้ในแอปเดียว** — เลือก backend ต่างกันต่อ cache แต่ละตัว เช่น Caffeine (in-memory, เร็ว — ดู [[Java Caffeine]]) สำหรับข้อมูล hot + Redis (distributed) สำหรับข้อมูลที่ต้องแชร์ข้าม instance (ดู [[Redis]])
 - **OIDC filter เลือก scope ได้ว่าจะรันกับ flow ไหน** — แยก filter สำหรับ bearer token flow ออกจาก authorization code flow ได้ชัดเจน (ดู [[Quarkus Keycloak]]) เดิมถ้าเปิดทั้งสอง flow พร้อมกัน filter จะรันปนกันคาดเดายาก
 - Dev Services อัปเดต default image ของ Elasticsearch/OpenSearch เป็นเวอร์ชันใหม่กว่า
 

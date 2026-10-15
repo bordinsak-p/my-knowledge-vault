@@ -34,6 +34,7 @@ created: 2026-08-18
 | [[Java JUnit 5]] | `@Test`/lifecycle, assertion, `@Nested`, `@ParameterizedTest`, instance lifecycle, เทียบ JUnit 4 | ✅ |
 | [[Java REST Assured]] | `given()`/`when()`/`then()` มีอะไรให้ใช้บ้าง, Hamcrest matcher ที่ใช้บ่อย, `extract()` | ✅ |
 | [[Java Virtual Threads]] | JEP 444 (Java 21), carrier thread, pinning, `ScopedValue`, ไม่ช่วย CPU-bound | ✅ |
+| [[Java Caffeine]] | cache ในหน่วยความจำ: `get(key, loader)`, eviction แบบ W-TinyLFU, expire vs refresh, หมดอายุแบบ lazy + `Scheduler`, ใช้กับ `quarkus-cache`, เทียบ Redis | ✅ |
 
 ---
 

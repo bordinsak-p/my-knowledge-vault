@@ -173,7 +173,7 @@ Thread A อ่านค่าเก่าจาก DB ไปก่อน Thread
 
 ## 7. Multi-level cache — L1 (in-process) + L2 (distributed)
 
-ต่อ cache in-process (เร็วระดับ nanosecond แต่แต่ละ instance แยกกัน เช่น Caffeine) ไว้หน้า cache กลาง (เร็วระดับ sub-millisecond ทุก instance เห็นชุดเดียวกัน เช่น Redis) — อ่านเช็ค L1 ก่อน miss ค่อยไป L2 miss อีกค่อยไป DB (`quarkus-cache` ทำแบบนี้ให้อัตโนมัติ default เป็น Caffeine แล้วค่อยสลับไป Redis ทีหลังได้โดยไม่แก้โค้ด — ดู [[Quarkus Redis]] ข้อ 2)
+ต่อ cache in-process (เร็วระดับ nanosecond แต่แต่ละ instance แยกกัน เช่น Caffeine — รายละเอียดการใช้ดู [[Java Caffeine]]) ไว้หน้า cache กลาง (เร็วระดับ sub-millisecond ทุก instance เห็นชุดเดียวกัน เช่น Redis) — อ่านเช็ค L1 ก่อน miss ค่อยไป L2 miss อีกค่อยไป DB (`quarkus-cache` ทำแบบนี้ให้อัตโนมัติ default เป็น Caffeine แล้วค่อยสลับไป Redis ทีหลังได้โดยไม่แก้โค้ด — ดู [[Quarkus Redis]] ข้อ 2)
 
 **ข้อแลก:** L1 เร็วกว่ามากแต่**ไม่ sync ข้าม instance อัตโนมัติ** — instance A invalidate แล้ว instance B's L1 ยังมีของเก่าค้างจนกว่า TTL ของ L1 จะหมด ถ้าต้อง sync ทันทีต้อง broadcast invalidate ข้าม instance เอง (เช่นใช้ Redis Pub/Sub ประกาศ "ล้าง L1 กันด้วย" — ตรงกับที่ [[Redis]] ข้อ 4.6 บอกว่า Pub/Sub เหมาะกับงานที่ข้อความหายได้บ้าง เคสนี้เข้าเกณฑ์เพราะ TTL เป็นตาข่ายสำรองอยู่แล้ว)
 
@@ -225,6 +225,7 @@ Stampede guard   : ttl = base ± jitter, หรือ lock ตอน refetch ค
 
 - [[Redis]] — implementation จริงของ cache-aside/distributed lock (ข้อ 4.1-4.2), ตัวเลือก eviction policy จริงบน Redis (ข้อ 6)
 - [[Quarkus Redis]] — `@CacheResult` = read-through จริงในโค้ด, Caffeine (L1) → Redis (L2) จริง (ข้อ 2), กับดักเรื่อง cache key version (ข้อ 7)
+- [[Java Caffeine]] — cache ในโปรเซส (L1) ตัวจริง: single-flight `get(key, loader)`, W-TinyLFU, expire vs refresh (stale-while-revalidate ในเครื่อง)
 - [[Idempotency]] — หลักการใกล้เคียงกัน (delete idempotent แต่ update ไม่, ข้อ 4.2)
 - [[Design Patterns]] — หน้ารวม
 

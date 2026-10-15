@@ -170,6 +170,7 @@ Panache entity 1 ตัว + endpoint 2 ตัว + SQLite + native build ให
 
 - [[API Flow Spec]] — spec ละเอียดของแต่ละ endpoint
 - [[Quarkus hibernate]]
+- [[Java Caffeine]] — local cache ที่เคยวางแผนไว้ก่อนเปลี่ยนเป็น Redis (Log 2026-09-29)
 - [[Greenhouse]]
 
 ## 📝 Log

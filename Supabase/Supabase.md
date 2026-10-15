@@ -183,6 +183,7 @@ create policy "name" on x for select using (true);
 ## 🔗 เกี่ยวข้อง
 
 - [[Supabase CRUD]] — reference คำสั่ง `@supabase/supabase-js` แบบเต็ม (select/insert/update/upsert/delete, filter, modifier)
+- [[Quarkus + flyway connect supabase]] — ใช้ Supabase เป็นแค่ Postgres จากแอป Quarkus ผ่าน JDBC + Flyway: Session pooler, baseline, ปิด Data API, error ที่เจอ
 - [[Hugging Face]] — embedding model ที่ใช้คู่กับ pgvector ทำ RAG ได้ (ข้อ 6)
 - [[Docker Basics]] — self-host Supabase ทั้ง stack ผ่าน Docker ได้ตามข้อ 5
 - [[Keycloak]] — ทางเลือกอื่นสำหรับ auth ถ้าไม่อยากผูก auth เข้ากับระบบเดียวกับ database

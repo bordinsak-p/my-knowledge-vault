@@ -79,6 +79,7 @@ created: 2026-08-18
 ## 🔗 ที่อื่นใน vault
 
 - [[Java]] — ตัวภาษาและ core library
+- [[Quarkus + flyway connect supabase]] — ต่อ Quarkus + Flyway เข้ากับ Supabase (Postgres) ผ่าน Session pooler
 - [[Greenhouse]] — โปรเจกต์ที่อยากทำ
 
 ## 📖 อ้างอิงหลัก

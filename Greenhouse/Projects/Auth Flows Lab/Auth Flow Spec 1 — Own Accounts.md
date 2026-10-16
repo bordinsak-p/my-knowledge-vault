@@ -8,7 +8,7 @@ type: spec
 status: draft
 parent: "[[Auth Flows Lab]]"
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # 🔑 Auth Flow Spec 1 — Own Accounts (ทำ auth เอง)
@@ -168,27 +168,58 @@ cookie ถูก browser แนบให้เองแม้คำขอมา�
 | หมุนเวียน | ให้มี key active ได้ 2 ตัวช่วงเปลี่ยน แล้วเพิกถอนตัวเก่า |
 | จำกัด | rate limit / quota ต่อ key |
 
-**โค้ดที่รันจริง ▶️ (Quarkus 3.33.4)** — mechanism เขียนเองสามชิ้น:
+**โค้ดที่รันจริง ▶️ (Quarkus 3.33.4)** — เขียนเอง 4 ชิ้น จัดให้ส่วนที่ต้องแตะ `Uni` เหลือน้อยที่สุด ส่วนตรรกะจริงเป็น Java ธรรมดา อ่านได้แม้ยังไม่เคยเขียน reactive (รันซ้ำใน lab เล็กที่มีแค่ `quarkus-rest` + `quarkus-security` เมื่อ 2026-10-16)
+
+**อ่าน `Uni` ใน 1 นาที (ถ้ายังไม่เคยเขียน reactive)**
+
+Quarkus ตรวจ auth บน *event loop* — thread I/O ของ Vert.x ที่มีน้อยและแบ่งกันใช้หลาย request (ใน log ชื่อ `vert.x-eventloop-thread-N`) ถ้า thread นี้ค้างรอ DB หรือ HTTP งานอื่นบน thread เดียวกันก็ขยับไม่ได้ 🔎 เพราะอย่างนี้ interface ของ mechanism กับ `IdentityProvider` จึงให้คืน `Uni<T>` แทน `T` — นึกภาพเป็น "กล่องที่ใส่ผลลัพธ์ T ซึ่งจะมาทีหลัง" (คล้าย `CompletableFuture<T>` แบบหลวม ๆ) Quarkus เป็นคนรอรับกล่องให้เอง งานของเราคือ **ส่งกล่องกลับไป ไม่ต้องเปิดกล่อง** ท่าที่ใช้ในโค้ดนี้มีแค่ 4 ท่า:
+
+| ท่า | แปลว่า | อยู่ที่ไหน |
+|---|---|---|
+| `Uni.createFrom().item(x)` | "มีคำตอบแล้ว คือ x" — ห่อค่าธรรมดาเป็น `Uni` | `getChallenge`, `getCredentialTransport` |
+| `Uni.createFrom().nullItem()` | "ไม่มีคำตอบ ไม่ใช่เรื่องของฉัน" | `authenticate` ของ mechanism ตอนไม่มี key |
+| `return idp.authenticate(...)` | "ส่งต่อให้ IdentityProvider" แล้ว return ผลของมันกลับไปตรง ๆ | `authenticate` ของ mechanism |
+| `return context.runBlocking(() -> { ... })` | "รันโค้ด blocking ธรรมดาใน `{ }` บน worker thread" — `return` ในนั้น = ผ่าน, `throw` = ปฏิเสธ | `authenticate` ของ IdentityProvider |
+
+กฎมี 3 ข้อ: **(1)** คืน `Uni` กลับไปเลย อย่าแกะค่าออกมา **(2)** งานที่ต้องรอ — query DB, เรียก API ข้างนอก, hash ช้าอย่าง bcrypt/Argon2 (ตาราง A7.5: 70–355 ms ต่อครั้ง) — ต้องอยู่ใน `runBlocking` **(3)** ห้ามเรียก `.await()` ในสองคลาสนี้ ผลลองจริงของข้อ 2 และ 3 อยู่ในตาราง "กับดักของคนที่ยังไม่เคยเขียน reactive" ถัดจากผลรัน
+
+**① `ApiKeyMechanism` — ด่านหน้า อ่าน header แล้วส่งต่อ**
 
 ```java
+import io.quarkus.security.identity.IdentityProviderManager;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.quarkus.security.identity.request.AuthenticationRequest;
+import io.quarkus.vertx.http.runtime.security.ChallengeData;
+import io.quarkus.vertx.http.runtime.security.HttpAuthenticationMechanism;
+import io.quarkus.vertx.http.runtime.security.HttpCredentialTransport;
+import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.RoutingContext;
+import jakarta.enterprise.context.ApplicationScoped;
+import java.util.Set;
+
 @ApplicationScoped
 public class ApiKeyMechanism implements HttpAuthenticationMechanism {
     static final String HEADER = "X-API-Key";
 
+    // รันบน event loop — อ่าน header แล้วส่งต่ออย่างเดียว ห้ามตรวจ key หรือเรียก DB ที่นี่
     @Override
     public Uni<SecurityIdentity> authenticate(RoutingContext context, IdentityProviderManager idp) {
         String key = context.request().getHeader(HEADER);
         if (key == null || key.isBlank()) {
-            return Uni.createFrom().nullItem();   // ไม่มี credential → ให้ mechanism อื่น/401 จัดการ
+            return Uni.createFrom().nullItem();
+            // ไม่มี key → ไม่ใช่เรื่องของ mechanism นี้ (path ที่ต้อง login จะได้ 401)
         }
         return idp.authenticate(new ApiKeyRequest(key));
+        // ส่งต่อให้ ApiKeyIdentityProvider แล้ว return ผลกลับไปตรง ๆ
     }
 
+    // หน้าตาของ 401 ที่ตอบกลับ
     @Override
     public Uni<ChallengeData> getChallenge(RoutingContext context) {
         return Uni.createFrom().item(new ChallengeData(401, "WWW-Authenticate", "ApiKey header=\"" + HEADER + "\""));
     }
 
+    // สองเมธอดล่างนี้ประกาศว่า mechanism นี้สร้าง request ชนิดไหน และ credential มาทาง header ไหน — เขียนครั้งเดียว
     @Override
     public Set<Class<? extends AuthenticationRequest>> getCredentialTypes() {
         return Set.of(ApiKeyRequest.class);
@@ -199,47 +230,124 @@ public class ApiKeyMechanism implements HttpAuthenticationMechanism {
         return Uni.createFrom().item(new HttpCredentialTransport(HttpCredentialTransport.Type.OTHER_HEADER, HEADER));
     }
 }
+```
+
+**② `ApiKeyRequest` — ซองใส่ key ที่ส่งจาก mechanism ไปให้ provider (Java ธรรมดา)**
+
+```java
+import io.quarkus.security.identity.request.BaseAuthenticationRequest;
 
 public class ApiKeyRequest extends BaseAuthenticationRequest {
     private final String key;
     public ApiKeyRequest(String key) { this.key = key; }
     public String key() { return key; }
 }
+```
+
+**③ `ApiKeyIdentityProvider` — ตัวตัดสิน ตรวจ key แล้วสร้างตัวตน (งานที่ block ได้ใส่ใน `runBlocking`)**
+
+```java
+import io.quarkus.security.AuthenticationFailedException;
+import io.quarkus.security.identity.AuthenticationRequestContext;
+import io.quarkus.security.identity.IdentityProvider;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.quarkus.security.runtime.QuarkusPrincipal;
+import io.quarkus.security.runtime.QuarkusSecurityIdentity;
+import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class ApiKeyIdentityProvider implements IdentityProvider<ApiKeyRequest> {
-    // เก็บเฉพาะ hash ของ key
-    private final Map<String, String> hashToClient = Map.of(sha256Hex("lab_live_abc123"), "billing-service");
 
-    @Override public Class<ApiKeyRequest> getRequestType() { return ApiKeyRequest.class; }
+    @Inject
+    ApiKeyStore store;   // ที่เก็บ key เป็น Java ธรรมดา (ชิ้น ④)
+
+    @Override
+    public Class<ApiKeyRequest> getRequestType() {
+        return ApiKeyRequest.class;
+    }
 
     @Override
     public Uni<SecurityIdentity> authenticate(ApiKeyRequest request, AuthenticationRequestContext context) {
-        String client = hashToClient.get(sha256Hex(request.key()));
-        if (client == null) {
-            return Uni.createFrom().failure(new AuthenticationFailedException());
-        }
-        return Uni.createFrom().item(QuarkusSecurityIdentity.builder()
-                .setPrincipal(new QuarkusPrincipal(client))
-                .addRole("service")
-                .build());
+        return context.runBlocking(() -> {   // ← ใน { } นี้เขียน Java แบบ blocking ได้ตามปกติ (รันบน worker thread)
+            String client = store.findClientByKeyHash(ApiKeyStore.sha256Hex(request.key()));
+            if (client == null) {
+                throw new AuthenticationFailedException();   // ← throw ธรรมดา = ปฏิเสธ (ผลคือ 401)
+            }
+            return QuarkusSecurityIdentity.builder()         // ← return ธรรมดา = ผ่าน
+                    .setPrincipal(new QuarkusPrincipal(client))
+                    .addRole("service")
+                    .build();
+        });
     }
 }
 ```
 
-แบ่งหน้าที่เป็นสองชั้น: **mechanism** ดึง credential จาก request + กำหนดหน้าตา 401 · **IdentityProvider** ตรวจ credential แล้วสร้าง `SecurityIdentity` (รูปแบบนี้ใช้ซ้ำได้กับ session id ใน A3, HMAC ใน D6) เพิ่ม `SecurityIdentityAugmentor` เมื่อต้องเติมข้อมูลหลังตรวจ ([[Quarkus Security]] ข้อ 1)
+**④ `ApiKeyStore` — ที่เก็บ key (Java ธรรมดา ไม่มี `Uni` เลย)**
 
-**ผลรันจริง ▶️** — config `quarkus.http.auth.permission.apikey.auth-mechanism=x-api-key` (ชื่อที่ใช้ได้ในการรัน คือชื่อ header ตัวเล็ก ไม่ได้ทดสอบชื่ออื่น)
+```java
+import jakarta.enterprise.context.ApplicationScoped;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.Map;
+
+@ApplicationScoped
+public class ApiKeyStore {
+    // เก็บเฉพาะ hash ของ key — lab ใช้ Map ในหน่วยความจำ โปรเจกต์จริงเปลี่ยนเป็น query ตาราง api_keys (A7.7) ที่ method เดียวนี้
+    private final Map<String, String> hashToClient =
+            Map.of(sha256Hex("lab_live_abc123"), "billing-service");
+
+    // คืนชื่อ client ถ้าเจอ, null ถ้าไม่เจอ — query DB แบบ blocking ที่นี่ได้ เพราะถูกเรียกจากใน runBlocking
+    public String findClientByKeyHash(String keyHash) {
+        return hashToClient.get(keyHash);
+    }
+
+    public static String sha256Hex(String s) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);   // SHA-256 มีใน JDK ทุกตัว ไม่เกิดขึ้นจริง
+        }
+    }
+}
+```
+
+แบ่งหน้าที่เป็นสามชั้น: **mechanism** ดึง credential จาก request + กำหนดหน้าตา 401 (ชิ้นเดียวที่เต็มไปด้วย `Uni` เขียนครั้งเดียวแล้วไม่ต้องแก้อีก) · **IdentityProvider** ตรวจ credential แล้วสร้าง `SecurityIdentity` โดยครอบงาน blocking ด้วย `runBlocking` (รูปแบบนี้ใช้ซ้ำได้กับ session id ใน A3, HMAC ใน D6) · **Store** คือ Java ธรรมดาที่ไม่รู้จัก Quarkus Security เปลี่ยนจาก `Map` เป็น DB ได้โดยไม่แตะสองชั้นบน · ถ้าต้องเติมข้อมูลหลังตรวจ ให้เพิ่ม `SecurityIdentityAugmentor` ([[Quarkus Security]] ข้อ 1)
+
+ถ้า store ใช้ Hibernate ORM/Panache แล้วเจอ error เรื่อง request context: 🔎 เอกสาร security-customization บอกว่า request context ไม่ถูกเปิดให้เองตอน augment identity และแก้ด้วย `@ActivateRequestContext` ที่เมธอดซึ่งถูกเรียกจากใน `runBlocking` (ตัวอย่างในเอกสารเป็น `SecurityIdentityAugmentor` กรณี `IdentityProvider` ยังไม่ได้ลองรอบนี้ 🧠)
+
+**ผลรันจริง ▶️** — config `quarkus.http.auth.permission.apikey.auth-mechanism=x-api-key` (ชื่อที่ใช้ได้ในการรัน คือชื่อ header ตัวเล็ก ไม่ได้ทดสอบชื่ออื่น) สามแถวแรกได้ผลเดียวกับรอบแรกที่ยังไม่ใช้ `runBlocking`
 
 | ส่งอะไร | ผล |
 |---|---|
 | `X-API-Key: lab_live_abc123` | 200 `{"mechanism":"apikey","principal":"billing-service","roles":["service"]}` |
 | `X-API-Key: nope` | 401 + `WWW-Authenticate: ApiKey header="X-API-Key"` |
 | ไม่ส่ง | 401 + header เดียวกัน |
+| ส่ง header แต่ค่าว่าง | 401 + header เดียวกัน (`isBlank()` → `nullItem()`) |
+| ชื่อ header ตัวเล็ก `x-api-key: lab_live_abc123` | 200 (HTTP header ไม่แยกตัวพิมพ์) |
+| path ที่ไม่ต้อง login (`@PermitAll`) โดยไม่ส่ง key | 200 |
+
+**โค้ดแต่ละส่วนรันบน thread ไหน ▶️** (จาก log ที่เติมไว้ชั่วคราวใน lab บรรทัดละจุด ไม่ได้ใส่ในโค้ดด้านบน)
+
+| ตำแหน่ง | thread ที่เห็นใน log | แปลว่า |
+|---|---|---|
+| `ApiKeyMechanism.authenticate` | `vert.x-eventloop-thread-N` | event loop — ห้ามรอ ห้าม block |
+| ข้างใน `runBlocking { }` (`ApiKeyStore.findClientByKeyHash`) | `executor-thread-1` | worker thread — block ได้ |
+
+**กับดักของคนที่ยังไม่เคยเขียน reactive ▶️** (ทดสอบด้วย mechanism ที่แก้ชั่วคราวเฉพาะทดสอบ ไม่ใช่โค้ดด้านบน)
+
+| ทำอะไรใน `authenticate` ของ mechanism | ผล |
+|---|---|
+| แกะ `Uni` ด้วย `idp.authenticate(...).await().indefinitely()` (อยากได้ค่าธรรมดา) | **500** — log `IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-7` |
+| block ตรง ๆ ไม่ผ่าน `runBlocking` (จำลองด้วย `Thread.sleep(3500)` แทน DB/HTTP ที่ช้า) | **ไม่พังและไม่มี error** — ยังได้ 200 (ช้า ~3.8 วินาที) ทดสอบแบบยิงทีละ request ผ่านหมด แต่ log ขึ้น WARN `Thread[vert.x-eventloop-thread-15,5,main] has been blocked for 2151 ms, time limit is 2000 ms` ระหว่างนั้น event loop ตัวนั้นรับงานอื่นไม่ได้ (ตามเอกสาร 🔎 ไม่ได้วัดเอง) |
 
 **ข้อจำกัดที่ต้องรู้** ระบุแอปไม่ระบุผู้ใช้ · ไม่หมดอายุเองถ้าไม่ตั้ง · รั่วแล้วใช้ได้เต็มสิทธิ์จนกว่าจะเพิกถอน · ทำ consent ของผู้ใช้ไม่ได้ → ถ้าต้อง "ในนามผู้ใช้" หรืออายุสั้น ไปที่ B6 (client credentials) หรือ D5 (mTLS)
 
-**สถานะการตรวจ** 🔎 Quarkus custom `HttpAuthenticationMechanism` (ชื่อ interface และเมธอด) · ▶️ โค้ดและผลทั้งหมดด้านบน · 🧠 ข้อเสนอการออกแบบ key
+**สถานะการตรวจ** 🔎 Quarkus custom `HttpAuthenticationMechanism` (ชื่อ interface และเมธอด), เหตุผลที่ต้องเป็น `Uni` (reactive architecture guide), `runBlocking` และ `@ActivateRequestContext` (security-customization ซึ่งแสดงตัวอย่างกับ `SecurityIdentityAugmentor`) · ▶️ โค้ดและผลทั้งหมดด้านบน (คอมไพล์และรันซ้ำ 2026-10-16 หลังปรับเป็น `runBlocking`), thread ที่เห็นใน log, ผลของกับดัก 2 ข้อ · 🧠 ข้อเสนอการออกแบบ key, การใช้ `@ActivateRequestContext` กับ `IdentityProvider`
 
 ---
 
@@ -484,6 +592,7 @@ create table refresh_tokens (
 
 create table api_keys (
   id uuid primary key,
+  client_name text not null,   -- key นี้เป็นของ client ไหน (ApiKeyStore คืนค่านี้เป็นชื่อ principal)
   prefix text not null,
   key_hash bytea not null,
   scopes text[] not null default '{}',
@@ -510,6 +619,8 @@ log ทุก login ล้มเหลว, lockout, เปลี่ยนรห�
 - **ลืม clock skew 60 วินาที** — token "หมดอายุแล้ว" ยังผ่านอีก 1 นาที ▶️
 - **ตัวตรวจ JWT เลือก algorithm จาก header ของ token** — เปิดทาง `none` / HS256-ด้วย-public-key
 - **เก็บ API key เป็น plain text หรือส่งใน URL**
+- **แกะ `Uni` ด้วย `.await().indefinitely()` ใน mechanism/IdentityProvider** — ได้ 500 `The current thread cannot be blocked` เพราะรันบน event loop ▶️ คืน `Uni` กลับไปตรง ๆ แทน
+- **เรียก DB/HTTP ตรง ๆ ใน `authenticate` โดยไม่ผ่าน `runBlocking`** — ไม่พังและทดสอบทีละ request ผ่านหมด แต่ event loop ค้าง (log WARN `has been blocked for … ms`) ▶️
 - **เก็บ token รีเซ็ตเป็น plain text, ประกอบลิงก์จาก Host header, login ให้อัตโนมัติหลังรีเซ็ต**
 - **ตอบ "ไม่มีอีเมลนี้ในระบบ"** — เปิดทาง user enumeration
 - **ใช้ bcrypt กับรหัสยาวเกิน 72 ไบต์** — ส่วนเกินถูกตัดทิ้ง (OWASP) 🔎
@@ -552,7 +663,8 @@ quarkus.rest-csrf.token-signature-key=<32+ ตัวอักษร>
 
 - [Quarkus — Authentication mechanisms](https://quarkus.io/guides/security-authentication-mechanisms)
 - [Quarkus — Security with Jakarta Persistence](https://quarkus.io/guides/security-jpa)
-- [Quarkus — Security customization (custom HttpAuthenticationMechanism)](https://quarkus.io/guides/security-customization)
+- [Quarkus — Security customization (custom HttpAuthenticationMechanism, `runBlocking`, `@ActivateRequestContext`)](https://quarkus.io/guides/security-customization)
+- [Quarkus — Reactive architecture](https://quarkus.io/guides/quarkus-reactive-architecture) (ทำไม I/O thread ห้าม block จึงต้องมี `Uni`)
 - [Quarkus — Using JWT RBAC](https://quarkus.io/guides/security-jwt) · [JWT build](https://quarkus.io/guides/security-jwt-build)
 - [Quarkus — CSRF prevention](https://quarkus.io/guides/security-csrf-prevention)
 - [OWASP — Session Management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html) · [Forgot Password](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) · [Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) · [Authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)

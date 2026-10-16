@@ -339,7 +339,7 @@ quarkus.http.auth.permission.open.policy=permit
 | M | ทำอะไร | flow | รู้ว่าสำเร็จเมื่อ | ขนาด |
 |---|---|---|---|---|
 | M0 | ตั้งฐาน: repo, Quarkus, `whoami`, Bruno collection (+ docker-compose ถ้า Docker พร้อม) | — | `/lab/public/ping` ตอบได้, เปิด Dev UI ได้ | S |
-| M1 | credential ตรงๆ: Basic + API key (เขียน mechanism เอง) | A1, A4 | ตารางเทียบหน้าตา 401 ของแต่ละ mechanism, อธิบายได้ว่าทำไม credential ข้ามทางไม่ได้ | S |
+| M1 | credential ตรงๆ: Basic + API key (เขียน mechanism เอง — ไม่เคยเขียน reactive ก็ทำได้ A4 มีคู่มือ `Uni` 1 นาที) | A1, A4 | ตารางเทียบหน้าตา 401 ของแต่ละ mechanism, อธิบายได้ว่าทำไม credential ข้ามทางไม่ได้ | S |
 | M2 | session: form login, cookie flags, CSRF, session fixation, logout แบบเพิกถอนฝั่ง server | A3 | เห็น cookie ใน DevTools, ยิง CSRF จากอีกหน้าแล้วโดนบล็อก, logout แล้ว cookie เก่าใช้ไม่ได้ | M |
 | M3 | token ที่ออกเอง: JWT + JWKS + refresh rotation + reuse detection | A5, A6 | ชุดโจมตีใน A6 ผ่านครบ, refresh token ที่ถูกใช้ซ้ำทำให้เพิกถอนทั้งสาย | M |
 | M4 | OIDC: Angular + Keycloak (code + PKCE) แล้วทำ BFF มาเทียบ | B1, B2, B3 | บอกได้ว่า browser เห็น token อะไรบ้างในสองแบบ, API ปฏิเสธ ID token | M |

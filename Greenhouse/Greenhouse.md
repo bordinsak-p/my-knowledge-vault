@@ -42,7 +42,7 @@ created: 2026-08-17
 | [[CI-CD — Jenkins vs GitHub Actions]] | `seed` | devops | 2026-08-18 |
 | [[Background Job Processor (Quarkus)]] | `seed` | backend | 2026-09-21 |
 | [[LINE Slip Bot]] | `seed` | fullstack | 2026-10-03 |
-| [[Auth Flows Lab]] | `seed` | fullstack | 2026-10-15 |
+| [[Auth Flows Lab]] | `seed` | fullstack | 2026-10-16 |
 
 ## Composted — และบทเรียนที่ได้
 

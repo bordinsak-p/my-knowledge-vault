@@ -105,6 +105,7 @@ updated: 2026-10-16
   - [[Auth Flow Spec 1 — Own Accounts]] · [[Auth Flow Spec 2 — OAuth OIDC]] · [[Auth Flow Spec 3 — Federation Enterprise]] · [[Auth Flow Spec 4 — MFA Passkeys Machine]]
 - [[OAuth 2.0]] — grant type และ provider (ไม่พูดซ้ำในสเปค)
 - [[Keycloak]], [[Quarkus Keycloak]] — IdP และตัวอย่าง Angular + Quarkus ที่ lab ใช้ต่อยอด
+- [[Auth Flow Quiz]] — แบบทดสอบความเข้าใจ ตอบแล้วให้ Claude รีวิว
 - [[Quarkus Security]] — authorization (permission, multi-tenant)
 - [[CI-CD Secrets]] — workload identity (GitHub Actions OIDC)
 - [[LINE Slip Bot]] — โปรเจกต์ที่ต้องใช้ LINE Login ฝั่งแอดมิน

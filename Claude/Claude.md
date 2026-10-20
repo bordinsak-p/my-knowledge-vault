@@ -21,6 +21,7 @@ created: 2026-09-17
 | โน้ต | ว่าด้วย |
 |---|---|
 | [[Claude Code Best Practices]] | best practice รวมทุกอย่าง — verification loop, plan mode, CLAUDE.md, session management, automate/scale |
+| [[Claude Code Slash Commands]] | คำสั่ง `/` ทั้งหมดแยกหมวด, ตัวไหนควรใช้ตอน vibe code, ที่ชุมชนแนะนำ |
 | [[Claude Code Auto Mode]] | permission mode ที่ใช้ AI classifier แทนคนอนุมัติทุก action |
 | [[Claude Agent Lifecycle]] | agentic loop คืออะไร — 3 phase, tool 5 หมวด, session/context window ทำงานยังไง |
 | [[Claude Code Hooks]] | รันสคริปต์แบบ deterministic ที่จุดต่างๆ ใน lifecycle — event ที่ใช้บ่อย, exit code, ตัวอย่างจริง |

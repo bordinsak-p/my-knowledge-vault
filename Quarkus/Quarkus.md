@@ -43,6 +43,7 @@ created: 2026-08-18
 | [[Quarkus HTTP Methods]]    | GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS ครบ, safe/idempotent/cacheable, annotation ใน Quarkus, status code คู่กัน                | ✅          |
 | [[Quarkus MIME Types]]      | media type มีอะไรบ้าง, `@Produces`/`@Consumes`, content negotiation, multipart, streaming, 415 vs 406                           | ✅          |
 | [[Quarkus WebSocket]]       | classic vs websockets-next, ตัวอย่างห้องแชทเต็ม, broadcast, path param, กับดัก, เริ่มลองยังไง                                   | ✅          |
+| [[Quarkus OIDC]]            | `quarkus-oidc` คืออะไร เกี่ยวกับ auth ยังไง, โหมด service/web-app/hybrid, bearer vs code flow, ตรวจอะไรใน token | ✅          |
 | [[Quarkus Keycloak]]        | Keycloak + Angular + Quarkus OIDC ครบวงจร, CORS/preflight, service-to-service, `@TestSecurity`, เริ่มลองยังไง                   | ✅          |
 | [[Quarkus Security]]        | `SecurityIdentityAugmentor`, `@PermissionsAllowed`/`@PermissionChecker`, multi-tenant OIDC (static/dynamic)                     | ✅          |
 | [[Quarkus Testing]]         | `@QuarkusTest`, REST Assured, `@TestTransaction`, `@InjectMock`, Dev Services, เอาเทสที่ comment ไว้กลับมารัน                   | ✅          |
